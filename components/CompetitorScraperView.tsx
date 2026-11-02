@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Users2, Plus, Trash2, Power, Play, CheckCircle2, AlertCircle, ExternalLink, Globe } from "lucide-react";
+import { Users2, Plus, Trash2, Power, Play, CheckCircle2, AlertCircle, ExternalLink, Sparkles } from "lucide-react";
 import { CompetitorTarget, SocialPlatform } from "@/lib/types";
 
 export function CompetitorScraperView() {
@@ -44,7 +44,7 @@ export function CompetitorScraperView() {
       if (res.ok) {
         setHandle("");
         setCategory("");
-        setMessage({ type: "success", text: `Added @${data.competitor.handle} to active targets.` });
+        setMessage({ type: "success", text: `Added @${data.competitor.handle} to active surveillance.` });
         fetchCompetitors();
       } else {
         setMessage({ type: "error", text: data.error });
@@ -81,7 +81,7 @@ export function CompetitorScraperView() {
       if (res.ok) {
         setMessage({
           type: "success",
-          text: `Dual-platform scrape complete! Analyzed ${data.stats?.postsAnalyzed} posts and generated ${data.stats?.conceptsGenerated} fresh concepts in the Content Calendar tab.`,
+          text: `Dual-platform scrape complete! Analyzed ${data.stats?.postsAnalyzed} posts and generated ${data.stats?.conceptsGenerated} concepts in the Content Calendar tab.`,
         });
       } else {
         setMessage({ type: "error", text: data.error || "Scrape failed" });
@@ -94,22 +94,22 @@ export function CompetitorScraperView() {
   };
 
   return (
-    <div className="space-y-8 max-w-6xl">
+    <div className="space-y-8 max-w-6xl mx-auto pb-16">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            <Users2 className="w-6 h-6 text-indigo-400" /> Dual-Platform Competitor Intelligence
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1f1f1f] flex items-center gap-2.5">
+            <Users2 className="w-7 h-7 text-[#0b57d0]" /> Dual-Platform Competitor Intelligence
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Configure competitor targets. The Apify SDK extracts transcripts, engagement velocity, and comment reactions
-            from Instagram (`apify/instagram-post-scraper`) and TikTok (`clockworks/tiktok-scraper`).
+          <p className="text-sm text-[#444746] mt-1">
+            Track top-performing creators across Instagram and TikTok. The Apify SDK extracts transcripts, engagement velocity,
+            and audience comments to identify what resonates.
           </p>
         </div>
         <button
           onClick={handleTriggerScrape}
           disabled={isRunningScrape || competitors.filter((c) => c.active).length === 0}
-          className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium text-sm shadow-lg shadow-indigo-500/25 transition disabled:opacity-50"
+          className="flex items-center space-x-2 px-6 py-2.5 rounded-full bg-[#0b57d0] hover:bg-[#0842a0] text-white font-medium text-sm shadow-sm hover:shadow transition disabled:opacity-50"
         >
           <Play className={`w-4 h-4 ${isRunningScrape ? "animate-spin" : "fill-current"}`} />
           <span>{isRunningScrape ? "Scraping & Synthesizing..." : "Run Dual Scraper Now"}</span>
@@ -118,10 +118,10 @@ export function CompetitorScraperView() {
 
       {message && (
         <div
-          className={`p-4 rounded-xl border flex items-center space-x-3 text-sm ${
+          className={`p-4 rounded-2xl border flex items-center space-x-3 text-sm ${
             message.type === "success"
-              ? "bg-emerald-950/30 border-emerald-800/80 text-emerald-300"
-              : "bg-red-950/30 border-red-800/80 text-red-300"
+              ? "bg-[#e6f4ea] border-[#ceead6] text-[#137333]"
+              : "bg-[#fce8e6] border-[#fad2cf] text-[#c5221f]"
           }`}
         >
           {message.type === "success" ? (
@@ -129,49 +129,49 @@ export function CompetitorScraperView() {
           ) : (
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
           )}
-          <span>{message.text}</span>
+          <span className="font-medium">{message.text}</span>
         </div>
       )}
 
-      {/* Add New Competitor Form */}
-      <div className="p-6 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur">
-        <h2 className="text-base font-semibold text-white mb-4">Add Target Account to Monitor</h2>
+      {/* Add New Competitor Form Card */}
+      <div className="p-7 rounded-[28px] bg-white border border-[#e1e3e1] shadow-sm">
+        <h2 className="text-base font-bold text-[#1f1f1f] mb-4">Add Competitor Account to Track</h2>
         <form onSubmit={handleAddCompetitor} className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Platform</label>
+            <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">Platform</label>
             <select
               value={platform}
               onChange={(e) => setPlatform(e.target.value as SocialPlatform)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+              className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
             >
               <option value="instagram">Instagram</option>
               <option value="tiktok">TikTok</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Handle / Username</label>
+            <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">Handle / Username</label>
             <input
               type="text"
-              placeholder="e.g. danmartell or @danmartell"
+              placeholder="e.g. danmartell"
               value={handle}
               onChange={(e) => setHandle(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] placeholder:text-[#727775] focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Niche / Category</label>
+            <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">Niche / Category</label>
             <input
               type="text"
               placeholder="e.g. SaaS Founders, Mindset"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] placeholder:text-[#727775] focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
             />
           </div>
           <div className="flex items-end">
             <button
               type="submit"
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition"
+              className="w-full flex items-center justify-center space-x-2 px-5 py-2.5 rounded-full bg-[#0b57d0] hover:bg-[#0842a0] text-white font-medium text-sm shadow-sm hover:shadow transition"
             >
               <Plus className="w-4 h-4" />
               <span>Add Target</span>
@@ -181,79 +181,79 @@ export function CompetitorScraperView() {
       </div>
 
       {/* Competitors List */}
-      <div className="p-6 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur">
-        <h2 className="text-base font-semibold text-white mb-4">Active Monitoring Targets ({competitors.length})</h2>
+      <div className="p-7 rounded-[28px] bg-white border border-[#e1e3e1] shadow-sm">
+        <h2 className="text-base font-bold text-[#1f1f1f] mb-4">Active Monitoring Targets ({competitors.length})</h2>
 
         {competitors.length === 0 ? (
-          <div className="py-12 text-center text-slate-500 text-sm">
+          <div className="py-12 text-center text-[#727775] text-sm">
             No competitor profiles added yet. Add a username above to start tracking.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-800 text-xs uppercase tracking-wider text-slate-400">
+                <tr className="border-b border-[#f1f3f4] text-xs uppercase tracking-wider text-[#727775]">
                   <th className="pb-3 font-semibold">Platform</th>
                   <th className="pb-3 font-semibold">Account Handle</th>
                   <th className="pb-3 font-semibold">Niche / Category</th>
-                  <th className="pb-3 font-semibold">Status</th>
+                  <th className="pb-3 font-semibold">Surveillance</th>
                   <th className="pb-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
+              <tbody className="divide-y divide-[#f1f3f4]">
                 {competitors.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-900/30 transition">
-                    <td className="py-3.5">
+                  <tr key={c.id} className="hover:bg-[#f8fafd] transition">
+                    <td className="py-4">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase ${
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase ${
                           c.platform === "instagram"
-                            ? "bg-pink-950/70 text-pink-300 border border-pink-800/60"
-                            : "bg-cyan-950/70 text-cyan-300 border border-cyan-800/60"
+                            ? "bg-[#fce8e6] text-[#c5221f]"
+                            : "bg-[#e8f0fe] text-[#0b57d0]"
                         }`}
                       >
                         {c.platform}
                       </span>
                     </td>
-                    <td className="py-3.5">
+                    <td className="py-4">
                       <div className="flex items-center space-x-2">
-                        <span className="font-semibold text-white">@{c.handle}</span>
+                        <span className="font-bold text-[#1f1f1f]">@{c.handle}</span>
                         <a
                           href={c.profileUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-slate-500 hover:text-slate-300"
+                          className="text-[#727775] hover:text-[#0b57d0]"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>
                       </div>
                     </td>
-                    <td className="py-3.5 text-slate-400">{c.category || "General"}</td>
-                    <td className="py-3.5">
+                    <td className="py-4 text-[#444746]">{c.category || "General"}</td>
+                    <td className="py-4">
                       <span
-                        className={`inline-flex items-center text-xs font-medium ${
-                          c.active ? "text-emerald-400" : "text-slate-500"
+                        className={`inline-flex items-center text-xs font-semibold ${
+                          c.active ? "text-[#137333]" : "text-[#727775]"
                         }`}
                       >
                         <span
                           className={`w-2 h-2 rounded-full mr-1.5 ${
-                            c.active ? "bg-emerald-400" : "bg-slate-600"
+                            c.active ? "bg-[#34a853]" : "bg-[#c4c7c5]"
                           }`}
                         />
-                        {c.active ? "Active Monitor" : "Paused"}
+                        {c.active ? "Active" : "Paused"}
                       </span>
                     </td>
-                    <td className="py-3.5 text-right space-x-2">
+                    <td className="py-4 text-right space-x-2">
                       <button
                         onClick={() => handleToggle(c.id)}
-                        className="p-1.5 rounded-lg border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800"
-                        title={c.active ? "Pause Scrape" : "Resume Scrape"}
+                        className="p-2 rounded-full border border-[#e1e3e1] text-[#444746] hover:text-[#1f1f1f] hover:bg-[#f0f4f9]"
+                        title={c.active ? "Pause" : "Resume"}
                       >
                         <Power className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDelete(c.id)}
-                        className="p-1.5 rounded-lg border border-slate-800 text-slate-400 hover:text-red-400 hover:bg-slate-800"
-                        title="Delete Target"
+                        className="p-2 rounded-full border border-[#e1e3e1] text-[#444746] hover:text-[#c5221f] hover:bg-[#fce8e6]"
+                        title="Delete"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

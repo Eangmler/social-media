@@ -9,7 +9,6 @@ import {
   Save,
   ExternalLink,
   Cloud,
-  RefreshCw,
   Sparkles,
 } from "lucide-react";
 import { AppSettings } from "@/lib/types";
@@ -74,7 +73,7 @@ export function SettingsView() {
       if (res.ok) {
         setMessage({
           type: "success",
-          text: "Credentials saved and synced directly to backend storage & API engines!",
+          text: "Credentials saved and synchronized directly with backend storage and API engines!",
         });
         fetchSettings();
       } else {
@@ -93,28 +92,28 @@ export function SettingsView() {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl">
+    <div className="space-y-8 max-w-5xl mx-auto pb-16">
       {/* Header */}
       <div>
-        <div className="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Real-Time Backend Dynamic Sync Enabled</span>
+        <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-[#e6f4ea] border border-[#ceead6] text-[#137333] text-xs font-semibold mb-2">
+          <span className="w-2 h-2 rounded-full bg-[#34a853] animate-pulse" />
+          <span>Real-Time Backend Dynamic Sync Active</span>
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-          <Settings className="w-6 h-6 text-indigo-400" /> API Connections & Credentials Portal
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1f1f1f] flex items-center gap-2.5">
+          <Settings className="w-7 h-7 text-[#0b57d0]" /> API Connections & Credentials
         </h1>
-        <p className="text-sm text-slate-400 mt-1">
-          Add or edit your API keys directly in this portal. Any updates save and synchronize immediately with your
+        <p className="text-sm text-[#444746] mt-1">
+          Add or update your API keys directly in this portal. Any updates save and synchronize immediately with your
           backend dual scraper, AI synthesis engine, publishers, and webhook listeners.
         </p>
       </div>
 
       {message && (
         <div
-          className={`p-4 rounded-xl border flex items-center space-x-3 text-sm ${
+          className={`p-4 rounded-2xl border flex items-center space-x-3 text-sm ${
             message.type === "success"
-              ? "bg-emerald-950/30 border-emerald-800/80 text-emerald-300"
-              : "bg-red-950/30 border-red-800/80 text-red-300"
+              ? "bg-[#e6f4ea] border-[#ceead6] text-[#137333]"
+              : "bg-[#fce8e6] border-[#fad2cf] text-[#c5221f]"
           }`}
         >
           {message.type === "success" ? (
@@ -122,29 +121,34 @@ export function SettingsView() {
           ) : (
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
           )}
-          <span>{message.text}</span>
+          <span className="font-semibold">{message.text}</span>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Section 1: Apify Web Scraper */}
-        <div className="p-7 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <Key className="w-5 h-5 text-indigo-400" />
-              <h2 className="text-base font-semibold text-white">1. Apify Layer (Dual-Platform Scraper)</h2>
+        <div className="p-8 sm:p-10 rounded-[32px] bg-white border border-[#e1e3e1] shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-[#f1f3f4] pb-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-[#e8f0fe] text-[#0b57d0] flex items-center justify-center">
+                <Key className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-[#1f1f1f]">1. Apify Layer (Dual-Platform Scraper)</h2>
+                <p className="text-xs text-[#727775]">Powers the Instagram & TikTok competitor extraction actors.</p>
+              </div>
             </div>
             <a
               href="https://console.apify.com/settings/integrations"
               target="_blank"
               rel="noreferrer"
-              className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+              className="text-xs font-semibold text-[#0b57d0] hover:text-[#0842a0] flex items-center gap-1"
             >
-              Get Token <ExternalLink className="w-3 h-3" />
+              Get Token <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
               Apify Personal API Token
             </label>
             <input
@@ -152,33 +156,38 @@ export function SettingsView() {
               placeholder="apify_api_..."
               value={settings.apifyToken || ""}
               onChange={(e) => updateField("apifyToken", e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+              className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
             />
           </div>
         </div>
 
         {/* Section 2: AI Intelligence */}
-        <div className="p-7 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur space-y-4">
-          <div className="flex items-center space-x-2.5">
-            <Sparkles className="w-5 h-5 text-purple-400" />
-            <h2 className="text-base font-semibold text-white">2. AI Hook & Content Engine (OpenAI / Gemini)</h2>
+        <div className="p-8 sm:p-10 rounded-[32px] bg-white border border-[#e1e3e1] shadow-sm space-y-4">
+          <div className="flex items-center space-x-3 border-b border-[#f1f3f4] pb-4">
+            <div className="w-10 h-10 rounded-full bg-[#f3e8fd] text-[#9333ea] flex items-center justify-center">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-[#1f1f1f]">2. AI Hook & Content Engine (OpenAI / Gemini)</h2>
+              <p className="text-xs text-[#727775]">Analyzes transcripts and comments to generate 5-day content plans.</p>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
                 Active AI Provider
               </label>
               <select
                 value={settings.aiProvider}
                 onChange={(e) => updateField("aiProvider", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
               >
                 <option value="openai">OpenAI (GPT-4o)</option>
                 <option value="gemini">Google Gemini (Gemini 1.5 Pro)</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
                 OpenAI API Key
               </label>
               <input
@@ -186,11 +195,11 @@ export function SettingsView() {
                 placeholder="sk-proj-..."
                 value={settings.openaiApiKey || ""}
                 onChange={(e) => updateField("openaiApiKey", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
                 Gemini API Key
               </label>
               <input
@@ -198,32 +207,37 @@ export function SettingsView() {
                 placeholder="AIzaSy..."
                 value={settings.geminiApiKey || ""}
                 onChange={(e) => updateField("geminiApiKey", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
               />
             </div>
           </div>
         </div>
 
         {/* Section 3: Meta Graph API (Instagram) */}
-        <div className="p-7 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <Key className="w-5 h-5 text-pink-400" />
-              <h2 className="text-base font-semibold text-white">3. Meta Graph API (Instagram Reels & Webhooks)</h2>
+        <div className="p-8 sm:p-10 rounded-[32px] bg-white border border-[#e1e3e1] shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-[#f1f3f4] pb-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-[#fce8e6] text-[#c5221f] flex items-center justify-center">
+                <Key className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-[#1f1f1f]">3. Meta Graph API (Instagram Reels & Webhooks)</h2>
+                <p className="text-xs text-[#727775]">Publishes Reels and sends automated DM responses to comments.</p>
+              </div>
             </div>
             <a
               href="https://developers.facebook.com/apps"
               target="_blank"
               rel="noreferrer"
-              className="text-xs text-pink-400 hover:text-pink-300 flex items-center gap-1"
+              className="text-xs font-semibold text-[#0b57d0] hover:text-[#0842a0] flex items-center gap-1"
             >
-              Meta App Console <ExternalLink className="w-3 h-3" />
+              Meta App Console <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
                 Instagram Business Account ID
               </label>
               <input
@@ -231,39 +245,39 @@ export function SettingsView() {
                 placeholder="e.g. 17841400000000000"
                 value={settings.instagramAccountId || ""}
                 onChange={(e) => updateField("instagramAccountId", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
                 Meta App ID
               </label>
               <input
                 type="text"
-                placeholder="Your Meta App ID"
+                placeholder="Meta App ID"
                 value={settings.metaAppId || ""}
                 onChange={(e) => updateField("metaAppId", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              Meta Long-Lived Access Token (User or System User Token)
+            <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
+              Meta Long-Lived Access Token
             </label>
             <input
               type="password"
               placeholder="EAAB..."
               value={settings.metaAccessToken || ""}
               onChange={(e) => updateField("metaAccessToken", e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+              className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
                 Meta App Secret
               </label>
               <input
@@ -271,43 +285,48 @@ export function SettingsView() {
                 placeholder="App secret for signature verification"
                 value={settings.metaAppSecret || ""}
                 onChange={(e) => updateField("metaAppSecret", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
                 Meta Webhook Verify Token
               </label>
               <input
                 type="text"
                 value={settings.metaWebhookVerifyToken || ""}
                 onChange={(e) => updateField("metaWebhookVerifyToken", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
               />
             </div>
           </div>
         </div>
 
-        {/* Section 4: TikTok Business & Content Posting API */}
-        <div className="p-7 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <Key className="w-5 h-5 text-cyan-400" />
-              <h2 className="text-base font-semibold text-white">4. TikTok Content Posting API</h2>
+        {/* Section 4: TikTok Business */}
+        <div className="p-8 sm:p-10 rounded-[32px] bg-white border border-[#e1e3e1] shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-[#f1f3f4] pb-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-[#e8f0fe] text-[#0b57d0] flex items-center justify-center">
+                <Key className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-[#1f1f1f]">4. TikTok Content Posting API</h2>
+                <p className="text-xs text-[#727775]">Directly publishes short-form videos to your TikTok profile.</p>
+              </div>
             </div>
             <a
               href="https://developers.tiktok.com/"
               target="_blank"
               rel="noreferrer"
-              className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+              className="text-xs font-semibold text-[#0b57d0] hover:text-[#0842a0] flex items-center gap-1"
             >
-              TikTok Developers <ExternalLink className="w-3 h-3" />
+              TikTok Developers <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
                 TikTok App ID
               </label>
               <input
@@ -315,53 +334,54 @@ export function SettingsView() {
                 placeholder="TikTok App ID"
                 value={settings.tiktokAppId || ""}
                 onChange={(e) => updateField("tiktokAppId", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                TikTok Open ID (Creator Identifier)
+              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
+                TikTok Open ID (Creator ID)
               </label>
               <input
                 type="text"
                 placeholder="TikTok Open ID"
                 value={settings.tiktokOpenId || ""}
                 onChange={(e) => updateField("tiktokOpenId", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              TikTok Creator / User Access Token
+            <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
+              TikTok Creator Access Token
             </label>
             <input
               type="password"
               placeholder="act.xxxxxxx"
               value={settings.tiktokAccessToken || ""}
               onChange={(e) => updateField("tiktokAccessToken", e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+              className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
             />
           </div>
         </div>
 
-        {/* Section 5: Optional Vercel Direct Sync */}
-        <div className="p-7 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur space-y-4">
-          <div className="flex items-center space-x-2.5">
-            <Cloud className="w-5 h-5 text-indigo-400" />
+        {/* Section 5: Optional Vercel Direct Auto-Sync */}
+        <div className="p-8 sm:p-10 rounded-[32px] bg-gradient-to-br from-[#f8fafd] to-[#f0f4f9] border border-[#d3e3fd] space-y-4">
+          <div className="flex items-center space-x-3 border-b border-[#e1e3e1] pb-4">
+            <div className="w-10 h-10 rounded-full bg-[#e8f0fe] text-[#0b57d0] flex items-center justify-center">
+              <Cloud className="w-5 h-5" />
+            </div>
             <div>
-              <h2 className="text-base font-semibold text-white">5. Optional: Vercel Direct Project Auto-Sync</h2>
-              <p className="text-xs text-slate-400">
-                Supply your Vercel Token and Project ID so every change made in this portal pushes directly to your Vercel
-                Project Environment Variables via Vercel's REST API.
+              <h2 className="text-base font-bold text-[#1f1f1f]">5. Optional: Vercel Project Direct Auto-Sync</h2>
+              <p className="text-xs text-[#727775]">
+                Pushes changes made in this portal directly to your Vercel Project Environment Variables via Vercel's REST API.
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
                 Vercel Personal Access Token
               </label>
               <input
@@ -369,19 +389,19 @@ export function SettingsView() {
                 placeholder="Create at vercel.com/account/tokens"
                 value={settings.vercelAuthToken || ""}
                 onChange={(e) => updateField("vercelAuthToken", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+                className="w-full bg-white border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
                 Vercel Project ID / Slug
               </label>
               <input
                 type="text"
-                placeholder="e.g. prj_xxxxxxx or social-media"
+                placeholder="e.g. social-media or prj_xxxx"
                 value={settings.vercelProjectId || ""}
                 onChange={(e) => updateField("vercelProjectId", e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+                className="w-full bg-white border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
               />
             </div>
           </div>
@@ -390,7 +410,7 @@ export function SettingsView() {
         <button
           type="submit"
           disabled={saving}
-          className="flex items-center justify-center space-x-2 px-8 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm shadow-lg shadow-indigo-500/20 transition disabled:opacity-50"
+          className="flex items-center justify-center space-x-2 px-8 py-3.5 rounded-full bg-[#0b57d0] hover:bg-[#0842a0] text-white font-semibold text-sm shadow-sm hover:shadow transition disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
           <span>{saving ? "Synchronizing to Backend..." : "Save & Sync to Backend"}</span>
