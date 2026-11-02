@@ -27,16 +27,13 @@ export class DualPlatformScraper {
 
     try {
       // apify/instagram-post-scraper is optimized for speed, engagement metrics, and captions
-      const run = await this.client.actor("apify/instagram-post-scraper").call(
-        {
-          username: usernames,
-          resultsLimit: maxPostsPerUser * usernames.length,
-          dataDetailLevel: "basicData",
-        },
-        {
-          timeoutSecs: 240,
-        }
-      );
+      const run: any = await this.client.actor("apify/instagram-post-scraper").call({
+        username: usernames,
+        resultsLimit: maxPostsPerUser * usernames.length,
+        dataDetailLevel: "basicData",
+      });
+
+      if (!run || !run.defaultDatasetId) return results;
 
       const { items } = await this.client.dataset(run.defaultDatasetId).listItems();
 
@@ -87,17 +84,14 @@ export class DualPlatformScraper {
     console.log(`[Apify Scraper] Scraping TikTok for: ${profiles.join(", ")}`);
 
     try {
-      const run = await this.client.actor("clockworks/tiktok-scraper").call(
-        {
-          profiles: profiles,
-          resultsPerPage: maxVideosPerUser,
-          shouldDownloadVideos: false,
-          shouldDownloadCovers: false,
-        },
-        {
-          timeoutSecs: 240,
-        }
-      );
+      const run: any = await this.client.actor("clockworks/tiktok-scraper").call({
+        profiles: profiles,
+        resultsPerPage: maxVideosPerUser,
+        shouldDownloadVideos: false,
+        shouldDownloadCovers: false,
+      });
+
+      if (!run || !run.defaultDatasetId) return results;
 
       const { items } = await this.client.dataset(run.defaultDatasetId).listItems();
 
