@@ -19,6 +19,11 @@ export interface AppSettings {
   dmTriggerKeyword: string;
   dmResponseTemplate: string;
   dmTargetUrl: string;
+  kvRestApiUrl?: string;
+  kvRestApiToken?: string;
+  vercelAuthToken?: string;
+  vercelProjectId?: string;
+  vercelTeamId?: string;
 }
 
 export interface CompetitorTarget {

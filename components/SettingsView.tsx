@@ -1,7 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Settings, Key, ShieldCheck, CheckCircle2, AlertCircle, Save, ExternalLink } from "lucide-react";
+import {
+  Settings,
+  Key,
+  CheckCircle2,
+  AlertCircle,
+  Save,
+  ExternalLink,
+  Cloud,
+  RefreshCw,
+  Sparkles,
+} from "lucide-react";
 import { AppSettings } from "@/lib/types";
 
 export function SettingsView() {
@@ -24,6 +34,11 @@ export function SettingsView() {
     dmTriggerKeyword: "LINK",
     dmResponseTemplate: "",
     dmTargetUrl: "",
+    kvRestApiUrl: "",
+    kvRestApiToken: "",
+    vercelAuthToken: "",
+    vercelProjectId: "",
+    vercelTeamId: "",
   });
 
   const [saving, setSaving] = useState(false);
@@ -57,7 +72,10 @@ export function SettingsView() {
       });
 
       if (res.ok) {
-        setMessage({ type: "success", text: "API credentials and configuration updated successfully." });
+        setMessage({
+          type: "success",
+          text: "Credentials saved and synced directly to backend storage & API engines!",
+        });
         fetchSettings();
       } else {
         const data = await res.json();
@@ -78,11 +96,16 @@ export function SettingsView() {
     <div className="space-y-8 max-w-5xl">
       {/* Header */}
       <div>
+        <div className="flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-1">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Real-Time Backend Dynamic Sync Enabled</span>
+        </div>
         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-          <Settings className="w-6 h-6 text-indigo-400" /> API Connections & Credentials
+          <Settings className="w-6 h-6 text-indigo-400" /> API Connections & Credentials Portal
         </h1>
         <p className="text-sm text-slate-400 mt-1">
-          Configure authentication keys for Apify web scraping, OpenAI / Gemini synthesis, Meta Graph API (Instagram), and TikTok Business APIs.
+          Add or edit your API keys directly in this portal. Any updates save and synchronize immediately with your
+          backend dual scraper, AI synthesis engine, publishers, and webhook listeners.
         </p>
       </div>
 
@@ -137,7 +160,7 @@ export function SettingsView() {
         {/* Section 2: AI Intelligence */}
         <div className="p-7 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur space-y-4">
           <div className="flex items-center space-x-2.5">
-            <Key className="w-5 h-5 text-purple-400" />
+            <Sparkles className="w-5 h-5 text-purple-400" />
             <h2 className="text-base font-semibold text-white">2. AI Hook & Content Engine (OpenAI / Gemini)</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -236,9 +259,6 @@ export function SettingsView() {
               onChange={(e) => updateField("metaAccessToken", e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
             />
-            <p className="text-[11px] text-slate-500 mt-1">
-              Required permissions: <code>instagram_basic</code>, <code>instagram_content_publish</code>, <code>instagram_manage_comments</code>, <code>instagram_manage_messages</code>.
-            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -300,7 +320,7 @@ export function SettingsView() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                TikTok Open ID (User Account Identifier)
+                TikTok Open ID (Creator Identifier)
               </label>
               <input
                 type="text"
@@ -323,9 +343,47 @@ export function SettingsView() {
               onChange={(e) => updateField("tiktokAccessToken", e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
             />
-            <p className="text-[11px] text-slate-500 mt-1">
-              Scope required: <code>video.publish</code>, <code>video.upload</code>.
-            </p>
+          </div>
+        </div>
+
+        {/* Section 5: Optional Vercel Direct Sync */}
+        <div className="p-7 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur space-y-4">
+          <div className="flex items-center space-x-2.5">
+            <Cloud className="w-5 h-5 text-indigo-400" />
+            <div>
+              <h2 className="text-base font-semibold text-white">5. Optional: Vercel Direct Project Auto-Sync</h2>
+              <p className="text-xs text-slate-400">
+                Supply your Vercel Token and Project ID so every change made in this portal pushes directly to your Vercel
+                Project Environment Variables via Vercel's REST API.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                Vercel Personal Access Token
+              </label>
+              <input
+                type="password"
+                placeholder="Create at vercel.com/account/tokens"
+                value={settings.vercelAuthToken || ""}
+                onChange={(e) => updateField("vercelAuthToken", e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                Vercel Project ID / Slug
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. prj_xxxxxxx or social-media"
+                value={settings.vercelProjectId || ""}
+                onChange={(e) => updateField("vercelProjectId", e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono"
+              />
+            </div>
           </div>
         </div>
 
@@ -335,7 +393,7 @@ export function SettingsView() {
           className="flex items-center justify-center space-x-2 px-8 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm shadow-lg shadow-indigo-500/20 transition disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
-          <span>{saving ? "Saving Credentials..." : "Save All API Credentials"}</span>
+          <span>{saving ? "Synchronizing to Backend..." : "Save & Sync to Backend"}</span>
         </button>
       </form>
     </div>

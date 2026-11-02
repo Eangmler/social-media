@@ -2,15 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/store";
 import { TikTokClient } from "@/lib/tiktok";
 
-/**
- * TikTok Webhook verification (GET challenge handshake).
- */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const challenge = searchParams.get("challenge");
   const token = searchParams.get("verify_token");
 
-  const settings = db.getSettings();
+  const settings = await db.getSettings();
 
   if (token === settings.tiktokWebhookVerifyToken && challenge) {
     console.log("[TikTok Webhook] Handshake verified successfully.");
@@ -20,16 +17,13 @@ export async function GET(req: NextRequest) {
   return new Response("OK", { status: 200 });
 }
 
-/**
- * TikTok Webhook event receiver for video comments (POST).
- */
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
     const signature = req.headers.get("x-tiktok-signature") || undefined;
     const timestamp = req.headers.get("x-tiktok-timestamp") || undefined;
 
-    const settings = db.getSettings();
+    const settings = await db.getSettings();
     const tiktokClient = new TikTokClient(settings);
 
     if (!tiktokClient.verifyWebhookSignature(rawBody, signature, timestamp)) {
@@ -38,7 +32,6 @@ export async function POST(req: NextRequest) {
 
     const payload = JSON.parse(rawBody);
 
-    // TikTok Event structure for comments
     const event = payload.event;
     if (event === "comment.create" || payload.type === "comment") {
       const commentData = payload.data || {};
@@ -52,7 +45,7 @@ export async function POST(req: NextRequest) {
       if (commentText.toUpperCase().includes(triggerWord)) {
         const message = settings.dmResponseTemplate.replace(/\{\{link\}\}/gi, settings.dmTargetUrl);
 
-        db.addDmLog({
+        await db.addDmLog({
           platform: "tiktok",
           senderId: commenterId,
           senderUsername: commentData.username || commenterId,

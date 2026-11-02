@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import axios from "axios";
 import { AppSettings, CompetitorTarget, ContentConcept, PublishJob, DmLog } from "./types";
 
 interface DBData {
@@ -34,6 +35,11 @@ const defaultSettings: AppSettings = {
     process.env.DM_DEFAULT_RESPONSE_TEMPLATE ||
     "Hey! Thanks for your comment on our video. Here is the link you requested: {{link}}",
   dmTargetUrl: process.env.DM_DEFAULT_TARGET_URL || "https://kisseh.com/thinkoutloud",
+  kvRestApiUrl: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || "",
+  kvRestApiToken: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || "",
+  vercelAuthToken: process.env.VERCEL_AUTH_TOKEN || "",
+  vercelProjectId: process.env.VERCEL_PROJECT_ID || "",
+  vercelTeamId: process.env.VERCEL_TEAM_ID || "",
 };
 
 const defaultCompetitors: CompetitorTarget[] = [
@@ -71,12 +77,44 @@ let inMemoryData: DBData = {
   dmLogs: [],
 };
 
-function readData(): DBData {
+/**
+ * Reads data with priority:
+ * 1. Remote Cloud KV (Upstash / Vercel KV) if configured
+ * 2. Local File (.data/store.json)
+ * 3. In-memory cache + environment variables
+ */
+async function readData(): Promise<DBData> {
+  const kvUrl = inMemoryData.settings.kvRestApiUrl || process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const kvToken = inMemoryData.settings.kvRestApiToken || process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (kvUrl && kvToken) {
+    try {
+      const res = await axios.get(`${kvUrl}/get/viralpulse_data`, {
+        headers: { Authorization: `Bearer ${kvToken}` },
+        timeout: 4000,
+      });
+      if (res.data?.result) {
+        const parsed = typeof res.data.result === "string" ? JSON.parse(res.data.result) : res.data.result;
+        inMemoryData = {
+          ...inMemoryData,
+          ...parsed,
+          settings: {
+            ...defaultSettings,
+            ...(parsed.settings || {}),
+          },
+        };
+        return inMemoryData;
+      }
+    } catch (err: any) {
+      console.warn("[Storage] Cloud KV read failed, using local store:", err.message);
+    }
+  }
+
   try {
     if (fs.existsSync(DATA_FILE)) {
       const raw = fs.readFileSync(DATA_FILE, "utf-8");
       const parsed = JSON.parse(raw);
-      return {
+      inMemoryData = {
         ...inMemoryData,
         ...parsed,
         settings: {
@@ -84,119 +122,244 @@ function readData(): DBData {
           ...(parsed.settings || {}),
         },
       };
+      return inMemoryData;
     }
   } catch (err) {
-    console.warn("Could not read local store file, falling back to memory:", err);
+    console.warn("[Storage] Local file read failed, using memory:", err);
   }
+
   return inMemoryData;
 }
 
-function writeData(data: DBData): void {
+/**
+ * Writes data with persistence to:
+ * 1. In-memory
+ * 2. Local file (if local disk is writable)
+ * 3. Cloud KV (if KV_REST_API_URL & KV_REST_API_TOKEN are configured)
+ */
+async function writeData(data: DBData): Promise<void> {
   inMemoryData = data;
+
+  // Local file write
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
   } catch (err) {
-    console.warn("Could not write to local store file (read-only environment):", err);
+    // Read-only environment on Vercel lambda is expected
+  }
+
+  // Cloud KV write
+  const kvUrl = data.settings.kvRestApiUrl || process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const kvToken = data.settings.kvRestApiToken || process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (kvUrl && kvToken) {
+    try {
+      await axios.post(
+        `${kvUrl}/set/viralpulse_data`,
+        JSON.stringify(data),
+        {
+          headers: {
+            Authorization: `Bearer ${kvToken}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 4000,
+        }
+      );
+      console.log("[Storage] Successfully synced state to Cloud KV.");
+    } catch (err: any) {
+      console.warn("[Storage] Cloud KV write failed:", err.message);
+    }
+  }
+}
+
+/**
+ * Optional Vercel API Sync:
+ * Automatically pushes updated settings directly to Vercel Project Environment Variables.
+ */
+async function syncToVercelEnv(settings: AppSettings): Promise<void> {
+  const token = settings.vercelAuthToken || process.env.VERCEL_AUTH_TOKEN;
+  const projectId = settings.vercelProjectId || process.env.VERCEL_PROJECT_ID;
+  const teamId = settings.vercelTeamId || process.env.VERCEL_TEAM_ID;
+
+  if (!token || !projectId) return;
+
+  const envMap: Record<string, string | undefined> = {
+    APIFY_TOKEN: settings.apifyToken,
+    AI_PROVIDER: settings.aiProvider,
+    OPENAI_API_KEY: settings.openaiApiKey,
+    GEMINI_API_KEY: settings.geminiApiKey,
+    META_ACCESS_TOKEN: settings.metaAccessToken,
+    INSTAGRAM_ACCOUNT_ID: settings.instagramAccountId,
+    META_APP_ID: settings.metaAppId,
+    META_APP_SECRET: settings.metaAppSecret,
+    META_WEBHOOK_VERIFY_TOKEN: settings.metaWebhookVerifyToken,
+    TIKTOK_ACCESS_TOKEN: settings.tiktokAccessToken,
+    TIKTOK_APP_ID: settings.tiktokAppId,
+    TIKTOK_APP_SECRET: settings.tiktokAppSecret,
+    TIKTOK_OPEN_ID: settings.tiktokOpenId,
+    DM_DEFAULT_TRIGGER_KEYWORD: settings.dmTriggerKeyword,
+    DM_DEFAULT_TARGET_URL: settings.dmTargetUrl,
+  };
+
+  const teamQuery = teamId ? `?teamId=${teamId}` : "";
+
+  console.log(`[Vercel Sync] Pushing updated credentials directly to Vercel Project: ${projectId}`);
+
+  for (const [key, val] of Object.entries(envMap)) {
+    if (!val || val.includes("••••")) continue;
+
+    try {
+      await axios.post(
+        `https://api.vercel.com/v10/projects/${projectId}/env${teamQuery}`,
+        {
+          key,
+          value: val,
+          type: "encrypted",
+          target: ["production", "preview", "development"],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    } catch (err: any) {
+      // If variable already exists, update it via PATCH
+      if (err.response?.status === 400 || err.response?.data?.error?.code === "ENV_ALREADY_EXISTS") {
+        try {
+          const listRes = await axios.get(
+            `https://api.vercel.com/v9/projects/${projectId}/env${teamQuery}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const existing = listRes.data?.envs?.find((e: any) => e.key === key);
+          if (existing?.id) {
+            await axios.patch(
+              `https://api.vercel.com/v9/projects/${projectId}/env/${existing.id}${teamQuery}`,
+              { value: val },
+              { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+            );
+          }
+        } catch (patchErr) {
+          // ignore error
+        }
+      }
+    }
   }
 }
 
 export const db = {
-  getSettings: (): AppSettings => {
-    return readData().settings;
-  },
-
-  updateSettings: (newSettings: Partial<AppSettings>): AppSettings => {
-    const data = readData();
-    data.settings = { ...data.settings, ...newSettings };
-    writeData(data);
+  getSettings: async (): Promise<AppSettings> => {
+    const data = await readData();
     return data.settings;
   },
 
-  getCompetitors: (): CompetitorTarget[] => {
-    return readData().competitors;
+  updateSettings: async (newSettings: Partial<AppSettings>): Promise<AppSettings> => {
+    const data = await readData();
+    data.settings = { ...data.settings, ...newSettings };
+    await writeData(data);
+
+    // If Vercel credentials are provided, sync directly to Vercel Environment Variables
+    if (data.settings.vercelAuthToken && data.settings.vercelProjectId) {
+      syncToVercelEnv(data.settings).catch((err) =>
+        console.warn("[Vercel Sync] Background sync error:", err.message)
+      );
+    }
+
+    return data.settings;
   },
 
-  addCompetitor: (competitor: Omit<CompetitorTarget, "id">): CompetitorTarget => {
-    const data = readData();
+  getCompetitors: async (): Promise<CompetitorTarget[]> => {
+    const data = await readData();
+    return data.competitors;
+  },
+
+  addCompetitor: async (competitor: Omit<CompetitorTarget, "id">): Promise<CompetitorTarget> => {
+    const data = await readData();
     const newEntry: CompetitorTarget = {
       ...competitor,
       id: "comp-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
     };
     data.competitors.push(newEntry);
-    writeData(data);
+    await writeData(data);
     return newEntry;
   },
 
-  deleteCompetitor: (id: string): void => {
-    const data = readData();
+  deleteCompetitor: async (id: string): Promise<void> => {
+    const data = await readData();
     data.competitors = data.competitors.filter((c) => c.id !== id);
-    writeData(data);
+    await writeData(data);
   },
 
-  toggleCompetitor: (id: string): CompetitorTarget | undefined => {
-    const data = readData();
+  toggleCompetitor: async (id: string): Promise<CompetitorTarget | undefined> => {
+    const data = await readData();
     const target = data.competitors.find((c) => c.id === id);
     if (target) {
       target.active = !target.active;
-      writeData(data);
+      await writeData(data);
     }
     return target;
   },
 
-  getCalendar: (): ContentConcept[] => {
-    return readData().calendar;
+  getCalendar: async (): Promise<ContentConcept[]> => {
+    const data = await readData();
+    return data.calendar;
   },
 
-  saveCalendarConcepts: (concepts: ContentConcept[]): void => {
-    const data = readData();
+  saveCalendarConcepts: async (concepts: ContentConcept[]): Promise<void> => {
+    const data = await readData();
     data.calendar = concepts;
-    writeData(data);
+    await writeData(data);
   },
 
-  updateConceptStatus: (id: string, status: ContentConcept["status"]): ContentConcept | undefined => {
-    const data = readData();
+  updateConceptStatus: async (
+    id: string,
+    status: ContentConcept["status"]
+  ): Promise<ContentConcept | undefined> => {
+    const data = await readData();
     const item = data.calendar.find((c) => c.id === id);
     if (item) {
       item.status = status;
-      writeData(data);
+      await writeData(data);
     }
     return item;
   },
 
-  getPublishJobs: (): PublishJob[] => {
-    return readData().publishJobs;
+  getPublishJobs: async (): Promise<PublishJob[]> => {
+    const data = await readData();
+    return data.publishJobs;
   },
 
-  addPublishJob: (job: Omit<PublishJob, "id" | "createdAt">): PublishJob => {
-    const data = readData();
+  addPublishJob: async (job: Omit<PublishJob, "id" | "createdAt">): Promise<PublishJob> => {
+    const data = await readData();
     const newJob: PublishJob = {
       ...job,
       id: "pub-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
       createdAt: new Date().toISOString(),
     };
     data.publishJobs.unshift(newJob);
-    writeData(data);
+    await writeData(data);
     return newJob;
   },
 
-  updatePublishJob: (id: string, updates: Partial<PublishJob>): void => {
-    const data = readData();
+  updatePublishJob: async (id: string, updates: Partial<PublishJob>): Promise<void> => {
+    const data = await readData();
     const job = data.publishJobs.find((j) => j.id === id);
     if (job) {
       Object.assign(job, updates);
-      writeData(data);
+      await writeData(data);
     }
   },
 
-  getDmLogs: (): DmLog[] => {
-    return readData().dmLogs;
+  getDmLogs: async (): Promise<DmLog[]> => {
+    const data = await readData();
+    return data.dmLogs;
   },
 
-  addDmLog: (log: Omit<DmLog, "id" | "timestamp">): DmLog => {
-    const data = readData();
+  addDmLog: async (log: Omit<DmLog, "id" | "timestamp">): Promise<DmLog> => {
+    const data = await readData();
     const newLog: DmLog = {
       ...log,
       id: "dm-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
@@ -206,7 +369,7 @@ export const db = {
     if (data.dmLogs.length > 100) {
       data.dmLogs = data.dmLogs.slice(0, 100);
     }
-    writeData(data);
+    await writeData(data);
     return newLog;
   },
 };

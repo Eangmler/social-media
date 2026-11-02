@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "videoUrl and caption are required." }, { status: 400 });
     }
 
-    const settings = db.getSettings();
+    const settings = await db.getSettings();
     if (!settings.metaAccessToken || !settings.instagramAccountId) {
       return NextResponse.json(
         { error: "Meta Access Token and Instagram Account ID must be configured in Settings." },
@@ -21,8 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Register job
-    const job = db.addPublishJob({
+    const job = await db.addPublishJob({
       platform: "instagram",
       videoUrl,
       hook: hook || "",
@@ -33,7 +32,7 @@ export async function POST(req: NextRequest) {
     const metaClient = new MetaGraphClient(settings);
     const result = await metaClient.publishReel(videoUrl, caption);
 
-    db.updatePublishJob(job.id, {
+    await db.updatePublishJob(job.id, {
       status: "published",
       platformPostId: result.mediaId,
       publishedAt: new Date().toISOString(),

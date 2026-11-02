@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "videoUrl and caption are required." }, { status: 400 });
     }
 
-    const settings = db.getSettings();
+    const settings = await db.getSettings();
     if (!settings.tiktokAccessToken) {
       return NextResponse.json(
         { error: "TikTok Creator Access Token must be configured in Settings." },
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const job = db.addPublishJob({
+    const job = await db.addPublishJob({
       platform: "tiktok",
       videoUrl,
       hook: hook || "",
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const tiktokClient = new TikTokClient(settings);
     const result = await tiktokClient.publishVideo(videoUrl, caption);
 
-    db.updatePublishJob(job.id, {
+    await db.updatePublishJob(job.id, {
       status: "published",
       platformPostId: result.publishId,
       publishedAt: new Date().toISOString(),

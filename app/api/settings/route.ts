@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/store";
 
 export async function GET() {
-  const settings = db.getSettings();
+  const settings = await db.getSettings();
 
-  // Mask sensitive tokens for front-end security display
   const maskedSettings = {
     ...settings,
     apifyToken: settings.apifyToken ? maskToken(settings.apifyToken) : "",
@@ -14,6 +13,8 @@ export async function GET() {
     metaAccessToken: settings.metaAccessToken ? maskToken(settings.metaAccessToken) : "",
     tiktokAppSecret: settings.tiktokAppSecret ? maskToken(settings.tiktokAppSecret) : "",
     tiktokAccessToken: settings.tiktokAccessToken ? maskToken(settings.tiktokAccessToken) : "",
+    kvRestApiToken: settings.kvRestApiToken ? maskToken(settings.kvRestApiToken) : "",
+    vercelAuthToken: settings.vercelAuthToken ? maskToken(settings.vercelAuthToken) : "",
   };
 
   return NextResponse.json({ settings: maskedSettings });
@@ -23,7 +24,6 @@ export async function POST(req: NextRequest) {
   try {
     const updates = await req.json();
 
-    // Prevent overwriting with masked strings
     const sanitizedUpdates: Record<string, any> = {};
     for (const [key, val] of Object.entries(updates)) {
       if (typeof val === "string" && (val.includes("••••") || val.includes("..."))) {
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
       sanitizedUpdates[key] = val;
     }
 
-    const updated = db.updateSettings(sanitizedUpdates);
+    const updated = await db.updateSettings(sanitizedUpdates);
     return NextResponse.json({ success: true, settings: updated });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

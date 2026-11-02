@@ -3,7 +3,7 @@ import { db } from "@/lib/store";
 import { SocialPlatform } from "@/lib/types";
 
 export async function GET() {
-  const competitors = db.getCompetitors();
+  const competitors = await db.getCompetitors();
   return NextResponse.json({ competitors });
 }
 
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         ? `https://www.instagram.com/${cleanHandle}/`
         : `https://www.tiktok.com/@${cleanHandle}`;
 
-    const newTarget = db.addCompetitor({
+    const newTarget = await db.addCompetitor({
       platform: platform as SocialPlatform,
       handle: cleanHandle,
       profileUrl,
@@ -41,7 +41,7 @@ export async function DELETE(req: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
-  db.deleteCompetitor(id);
+  await db.deleteCompetitor(id);
   return NextResponse.json({ success: true });
 }
 
@@ -50,6 +50,6 @@ export async function PATCH(req: NextRequest) {
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
-  const updated = db.toggleCompetitor(id);
+  const updated = await db.toggleCompetitor(id);
   return NextResponse.json({ success: true, competitor: updated });
 }
