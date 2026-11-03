@@ -1,10 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Users2, Plus, Trash2, Power, Play, CheckCircle2, AlertCircle, ExternalLink, Sparkles } from "lucide-react";
+import { Users2, Plus, Trash2, Power, Play, CheckCircle2, AlertCircle, ExternalLink, Sparkles, Settings } from "lucide-react";
 import { CompetitorTarget, SocialPlatform } from "@/lib/types";
+import { getClientVault } from "@/lib/auth";
 
-export function CompetitorScraperView() {
+interface CompetitorScraperViewProps {
+  onNavigate?: (tab: any) => void;
+}
+
+export function CompetitorScraperView({ onNavigate }: CompetitorScraperViewProps) {
   const [competitors, setCompetitors] = useState<CompetitorTarget[]>([]);
   const [platform, setPlatform] = useState<SocialPlatform>("instagram");
   const [handle, setHandle] = useState("");
@@ -76,7 +81,16 @@ export function CompetitorScraperView() {
     try {
       setIsRunningScrape(true);
       setMessage(null);
-      const res = await fetch("/api/cron/scrape-and-generate", { method: "POST" });
+      const vault = getClientVault();
+
+      const res = await fetch("/api/cron/scrape-and-generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-client-vault": JSON.stringify(vault),
+        },
+        body: JSON.stringify({ vault }),
+      });
       const data = await res.json();
       if (res.ok) {
         setMessage({
@@ -118,18 +132,32 @@ export function CompetitorScraperView() {
 
       {message && (
         <div
-          className={`p-4 rounded-2xl border flex items-center space-x-3 text-sm ${
+          className={`p-4 rounded-2xl border flex items-start space-x-3 text-sm ${
             message.type === "success"
               ? "bg-[#e6f4ea] border-[#ceead6] text-[#137333]"
               : "bg-[#fce8e6] border-[#fad2cf] text-[#c5221f]"
           }`}
         >
           {message.type === "success" ? (
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
           ) : (
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           )}
-          <span className="font-medium">{message.text}</span>
+          <div className="flex-1">
+            <span className="font-medium">{message.text}</span>
+            {message.type === "error" && onNavigate && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={() => onNavigate("settings")}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-white text-[#c5221f] border border-[#fad2cf] text-xs font-bold hover:bg-[#fad2cf] transition cursor-pointer"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Go to Settings & APIs to enter your Apify & Gemini keys</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

@@ -2,6 +2,7 @@ import { AppSettings, AuthSession } from "./types";
 
 const SESSION_KEY = "viralpulse_auth_session";
 const VAULT_KEY = "viralpulse_admin_vault";
+const COOKIE_NAME = "viralpulse_vault";
 
 export function getAuthSession(): AuthSession | null {
   if (typeof window === "undefined") return null;
@@ -29,7 +30,17 @@ export function getClientVault(): Partial<AppSettings> {
   try {
     const raw = localStorage.getItem(VAULT_KEY);
     if (!raw) return {};
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+
+    // Sanitize any corrupted bullet characters from previous sessions
+    const sanitized: Partial<AppSettings> = {};
+    for (const [key, val] of Object.entries(parsed)) {
+      if (typeof val === "string" && (val.includes("••••") || val.includes("..."))) {
+        continue;
+      }
+      (sanitized as any)[key] = val;
+    }
+    return sanitized;
   } catch (e) {
     return {};
   }
@@ -38,7 +49,20 @@ export function getClientVault(): Partial<AppSettings> {
 export function saveClientVault(settings: AppSettings): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(VAULT_KEY, JSON.stringify(settings));
+    // Sanitize bullets before saving
+    const sanitized: Record<string, any> = {};
+    for (const [k, v] of Object.entries(settings)) {
+      if (typeof v === "string" && (v.includes("••••") || v.includes("..."))) {
+        continue;
+      }
+      sanitized[k] = v;
+    }
+
+    const json = JSON.stringify(sanitized);
+    localStorage.setItem(VAULT_KEY, json);
+
+    // Write to cookie so all serverless routes on Vercel automatically receive it
+    document.cookie = `${COOKIE_NAME}=${encodeURIComponent(json)}; path=/; max-age=31536000; SameSite=Lax`;
   } catch (e) {
     console.error("Failed to save to local vault", e);
   }
@@ -46,8 +70,7 @@ export function saveClientVault(settings: AppSettings): void {
 
 /**
  * Merges server settings with local client vault.
- * If server masked a key with bullet points or returned empty,
- * local vault keeps the real key intact so it never resets!
+ * Local vault keeps the real unmasked key intact so it never resets!
  */
 export function mergeWithClientVault(serverSettings: AppSettings): AppSettings {
   const vault = getClientVault();
@@ -69,7 +92,7 @@ export function mergeWithClientVault(serverSettings: AppSettings): AppSettings {
     const serverVal = serverSettings[k];
     const vaultVal = vault[k];
 
-    // If server value is empty or masked, but vault has the real value, use vault!
+    // If server value is empty or has bullets, but vault has the real value, use vault!
     if ((!serverVal || (typeof serverVal === "string" && serverVal.includes("••••"))) && vaultVal) {
       (merged as any)[k] = vaultVal;
     } else if (serverVal && typeof serverVal === "string" && !serverVal.includes("••••")) {
@@ -77,7 +100,6 @@ export function mergeWithClientVault(serverSettings: AppSettings): AppSettings {
     }
   }
 
-  // Also preserve non-secret fields if vault has them and server returned defaults
   if (vault.aiProvider) merged.aiProvider = vault.aiProvider;
   if (vault.instagramAccountId && !merged.instagramAccountId) merged.instagramAccountId = vault.instagramAccountId;
   if (vault.metaAppId && !merged.metaAppId) merged.metaAppId = vault.metaAppId;

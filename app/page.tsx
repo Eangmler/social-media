@@ -79,7 +79,7 @@ export default function Home() {
       {/* Main Content Viewport */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {currentTab === "dashboard" && <DashboardOverview onNavigate={setCurrentTab} />}
-        {currentTab === "competitors" && <CompetitorScraperView />}
+        {currentTab === "competitors" && <CompetitorScraperView onNavigate={setCurrentTab} />}
         {currentTab === "calendar" && (
           <ContentCalendarView onSendToPublisher={handleSendToPublisher} onNavigate={setCurrentTab} />
         )}

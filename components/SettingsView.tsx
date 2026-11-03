@@ -12,6 +12,8 @@ import {
   Sparkles,
   ShieldCheck,
   Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { AppSettings } from "@/lib/types";
 import {
@@ -22,12 +24,15 @@ import {
 } from "@/lib/auth";
 
 export function SettingsView() {
+  const [showKey, setShowKey] = useState<Record<string, boolean>>({});
+  const toggleShow = (key: string) => setShowKey((prev) => ({ ...prev, [key]: !prev[key] }));
+
   const [settings, setSettings] = useState<AppSettings>(() => {
     const vault = getClientVault();
     return {
       adminPassword: vault.adminPassword || "admin123",
       apifyToken: vault.apifyToken || "",
-      aiProvider: vault.aiProvider || "openai",
+      aiProvider: vault.aiProvider || "gemini",
       openaiApiKey: vault.openaiApiKey || "",
       geminiApiKey: vault.geminiApiKey || "",
       metaAppId: vault.metaAppId || "",
@@ -216,16 +221,36 @@ export function SettingsView() {
             </a>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
-              Apify Personal API Token
-            </label>
-            <input
-              type="password"
-              placeholder="apify_api_..."
-              value={settings.apifyToken || ""}
-              onChange={(e) => updateField("apifyToken", e.target.value)}
-              className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
-            />
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold text-[#444746] uppercase tracking-wider">
+                Apify Personal API Token
+              </label>
+              {settings.apifyToken ? (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#e6f4ea] text-[#137333]">
+                  ✓ Token Active
+                </span>
+              ) : (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#fce8e6] text-[#c5221f]">
+                  Required for Scraper
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                type={showKey["apify"] ? "text" : "password"}
+                placeholder="apify_api_..."
+                value={settings.apifyToken || ""}
+                onChange={(e) => updateField("apifyToken", e.target.value)}
+                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 pr-10 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
+              />
+              <button
+                type="button"
+                onClick={() => toggleShow("apify")}
+                className="absolute right-3.5 top-3 text-[#727775] hover:text-[#1f1f1f]"
+              >
+                {showKey["apify"] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -250,33 +275,69 @@ export function SettingsView() {
                 onChange={(e) => updateField("aiProvider", e.target.value)}
                 className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
               >
-                <option value="openai">OpenAI (GPT-4o)</option>
-                <option value="gemini">Google Gemini (Gemini 1.5 Pro)</option>
+                <option value="gemini">Google Gemini (Gemini 1.5 Pro - Free)</option>
+                <option value="openai">OpenAI (GPT-4o - Paid)</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
-                OpenAI API Key
-              </label>
-              <input
-                type="password"
-                placeholder="sk-proj-..."
-                value={settings.openaiApiKey || ""}
-                onChange={(e) => updateField("openaiApiKey", e.target.value)}
-                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
-              />
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold text-[#444746] uppercase tracking-wider">
+                  OpenAI API Key
+                </label>
+                {settings.openaiApiKey && (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#e6f4ea] text-[#137333]">
+                    ✓ Set
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  type={showKey["openai"] ? "text" : "password"}
+                  placeholder="sk-proj-..."
+                  value={settings.openaiApiKey || ""}
+                  onChange={(e) => updateField("openaiApiKey", e.target.value)}
+                  className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 pr-10 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
+                />
+                <button
+                  type="button"
+                  onClick={() => toggleShow("openai")}
+                  className="absolute right-3.5 top-3 text-[#727775] hover:text-[#1f1f1f]"
+                >
+                  {showKey["openai"] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
-                Gemini API Key
-              </label>
-              <input
-                type="password"
-                placeholder="AIzaSy..."
-                value={settings.geminiApiKey || ""}
-                onChange={(e) => updateField("geminiApiKey", e.target.value)}
-                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
-              />
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold text-[#444746] uppercase tracking-wider">
+                  Gemini API Key (Free)
+                </label>
+                {settings.geminiApiKey ? (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#e6f4ea] text-[#137333]">
+                    ✓ Free Key Set
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#fce8e6] text-[#c5221f]">
+                    Required for Gemini
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  type={showKey["gemini"] ? "text" : "password"}
+                  placeholder="AIzaSy..."
+                  value={settings.geminiApiKey || ""}
+                  onChange={(e) => updateField("geminiApiKey", e.target.value)}
+                  className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 pr-10 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
+                />
+                <button
+                  type="button"
+                  onClick={() => toggleShow("gemini")}
+                  className="absolute right-3.5 top-3 text-[#727775] hover:text-[#1f1f1f]"
+                >
+                  {showKey["gemini"] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -334,13 +395,22 @@ export function SettingsView() {
             <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
               Meta Long-Lived Access Token
             </label>
-            <input
-              type="password"
-              placeholder="EAAB..."
-              value={settings.metaAccessToken || ""}
-              onChange={(e) => updateField("metaAccessToken", e.target.value)}
-              className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
-            />
+            <div className="relative">
+              <input
+                type={showKey["meta"] ? "text" : "password"}
+                placeholder="EAAB..."
+                value={settings.metaAccessToken || ""}
+                onChange={(e) => updateField("metaAccessToken", e.target.value)}
+                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 pr-10 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
+              />
+              <button
+                type="button"
+                onClick={() => toggleShow("meta")}
+                className="absolute right-3.5 top-3 text-[#727775] hover:text-[#1f1f1f]"
+              >
+                {showKey["meta"] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -423,13 +493,22 @@ export function SettingsView() {
             <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
               TikTok Creator Access Token
             </label>
-            <input
-              type="password"
-              placeholder="act.xxxxxxx"
-              value={settings.tiktokAccessToken || ""}
-              onChange={(e) => updateField("tiktokAccessToken", e.target.value)}
-              className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
-            />
+            <div className="relative">
+              <input
+                type={showKey["tiktok"] ? "text" : "password"}
+                placeholder="act.xxxxxxx"
+                value={settings.tiktokAccessToken || ""}
+                onChange={(e) => updateField("tiktokAccessToken", e.target.value)}
+                className="w-full bg-[#f8fafd] border border-[#e1e3e1] rounded-full px-4 py-2.5 pr-10 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
+              />
+              <button
+                type="button"
+                onClick={() => toggleShow("tiktok")}
+                className="absolute right-3.5 top-3 text-[#727775] hover:text-[#1f1f1f]"
+              >
+                {showKey["tiktok"] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
         </div>
 

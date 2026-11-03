@@ -28,7 +28,25 @@ async function handleScrapeAndGenerate(req: NextRequest) {
 
   let settings = await db.getSettings();
 
-  // If client passed vault in body, merge it with priority
+  // 1. Check Cookie Vault
+  const cookieVault = req.cookies.get("viralpulse_vault")?.value;
+  if (cookieVault) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(cookieVault));
+      settings = { ...settings, ...parsed };
+    } catch (e) {}
+  }
+
+  // 2. Check Header Vault
+  const headerVault = req.headers.get("x-client-vault");
+  if (headerVault) {
+    try {
+      const parsed = JSON.parse(headerVault);
+      settings = { ...settings, ...parsed };
+    } catch (e) {}
+  }
+
+  // 3. Check Request Body Vault
   if (req.method === "POST") {
     try {
       const body = await req.clone().json();
@@ -40,9 +58,17 @@ async function handleScrapeAndGenerate(req: NextRequest) {
     }
   }
 
-  if (!settings.apifyToken) {
+  // 4. Fallback to process.env if empty
+  if (!settings.apifyToken && process.env.APIFY_TOKEN) {
+    settings.apifyToken = process.env.APIFY_TOKEN;
+  }
+
+  if (!settings.apifyToken || settings.apifyToken.includes("••••")) {
     return NextResponse.json(
-      { error: "Apify API Token not configured. Please add your token in the Admin Settings tab." },
+      {
+        error:
+          "Apify API Token not configured or invalid. Please open the Settings & APIs tab, paste your Apify token, and click 'Save & Sync to Backend'.",
+      },
       { status: 400 }
     );
   }
@@ -64,26 +90,26 @@ async function handleScrapeAndGenerate(req: NextRequest) {
 
     const aiEngine = new AiContentEngine(settings);
     const concepts = await aiEngine.generateCalendarConcepts(scrapedPosts);
-    console.log(`[Cron Job] Generated ${concepts.length} viral video concepts.`);
+    console.log(`[Cron Job] Synthesized ${concepts.length} fresh video concepts with hooks.`);
 
+    // Persist new concepts to calendar storage
     await db.saveCalendarConcepts(concepts);
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
       stats: {
-        competitorsTargeted: competitors.length,
+        competitorsMonitored: competitors.length,
         postsAnalyzed: scrapedPosts.length,
         conceptsGenerated: concepts.length,
       },
       concepts,
     });
   } catch (err: any) {
-    console.error("[Cron Job] Workflow execution failed:", err);
+    console.error("[Cron Job] Execution failed:", err);
     return NextResponse.json(
       {
-        success: false,
-        error: err.message || "Failed to execute automated scraping and generation.",
+        error: "Automation run failed: " + (err.response?.data?.error?.message || err.message),
       },
       { status: 500 }
     );
