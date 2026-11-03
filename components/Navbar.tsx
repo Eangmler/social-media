@@ -9,27 +9,52 @@ import {
   MessageSquareCode,
   Settings,
   Sparkles,
-  Radio,
+  Users,
+  LogOut,
+  ShieldCheck,
+  UserCheck,
 } from "lucide-react";
+import { AuthSession } from "@/lib/types";
 
-export type NavTab = "dashboard" | "competitors" | "calendar" | "publisher" | "dm-automation" | "settings";
+export type NavTab =
+  | "dashboard"
+  | "competitors"
+  | "calendar"
+  | "publisher"
+  | "dm-automation"
+  | "testers"
+  | "settings";
 
 interface NavbarProps {
   currentTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
   onTriggerScrape?: () => void;
   isTriggering?: boolean;
+  session?: AuthSession | null;
+  onLogout?: () => void;
 }
 
-export function Navbar({ currentTab, onSelectTab, onTriggerScrape, isTriggering }: NavbarProps) {
-  const tabs = [
-    { id: "dashboard", label: "Overview", icon: LayoutDashboard },
-    { id: "competitors", label: "Competitor Scraper", icon: Users2 },
-    { id: "calendar", label: "AI Content Calendar", icon: CalendarDays },
-    { id: "publisher", label: "Publishing Layer", icon: Send },
-    { id: "dm-automation", label: "DM Automation", icon: MessageSquareCode },
-    { id: "settings", label: "Settings & APIs", icon: Settings },
+export function Navbar({
+  currentTab,
+  onSelectTab,
+  onTriggerScrape,
+  isTriggering,
+  session,
+  onLogout,
+}: NavbarProps) {
+  const isAdmin = session?.role === "admin";
+
+  const allTabs = [
+    { id: "dashboard", label: "Overview", icon: LayoutDashboard, adminOnly: false },
+    { id: "competitors", label: "Competitor Scraper", icon: Users2, adminOnly: false },
+    { id: "calendar", label: "AI Content Calendar", icon: CalendarDays, adminOnly: false },
+    { id: "publisher", label: "Publishing Layer", icon: Send, adminOnly: false },
+    { id: "dm-automation", label: "DM Automation", icon: MessageSquareCode, adminOnly: false },
+    { id: "testers", label: "Testers & Reviews", icon: Users, adminOnly: true },
+    { id: "settings", label: "Settings & APIs", icon: Settings, adminOnly: true },
   ] as const;
+
+  const visibleTabs = allTabs.filter((t) => (isAdmin ? true : !t.adminOnly));
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#e1e3e1]">
@@ -71,10 +96,29 @@ export function Navbar({ currentTab, onSelectTab, onTriggerScrape, isTriggering 
             </button>
           )}
 
-          {/* Profile Circle */}
-          <div className="w-8 h-8 rounded-full bg-[#1a73e8] text-white flex items-center justify-center font-semibold text-xs shadow-sm">
-            E
-          </div>
+          {/* User Badge & Logout */}
+          {session && (
+            <div className="flex items-center space-x-2 pl-2 border-l border-[#e1e3e1]">
+              <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#f1f3f4] text-xs text-[#1f1f1f] font-medium">
+                {isAdmin ? (
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#0b57d0]" />
+                ) : (
+                  <UserCheck className="w-3.5 h-3.5 text-[#34a853]" />
+                )}
+                <span className="hidden sm:inline font-semibold">{session.name}</span>
+              </div>
+
+              {onLogout && (
+                <button
+                  onClick={onLogout}
+                  title="Sign Out"
+                  className="p-1.5 rounded-full hover:bg-[#f1f3f4] text-[#727775] hover:text-[#c5221f] transition"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -82,13 +126,13 @@ export function Navbar({ currentTab, onSelectTab, onTriggerScrape, isTriggering 
       <div className="border-t border-[#f1f3f4] bg-[#f8fafd]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-1 sm:space-x-2 py-2 overflow-x-auto no-scrollbar">
-            {tabs.map((tab) => {
+            {visibleTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = currentTab === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => onSelectTab(tab.id)}
+                  onClick={() => onSelectTab(tab.id as NavTab)}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                     isActive
                       ? "bg-[#d3e3fd] text-[#041e49] shadow-sm font-semibold"

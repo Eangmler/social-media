@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Send, Video, CheckCircle2, AlertCircle, Loader2, Link2, Instagram } from "lucide-react";
 import { ContentConcept, SocialPlatform } from "@/lib/types";
+import { getClientVault } from "@/lib/auth";
 
 interface PublisherViewProps {
   prefilledConcept?: ContentConcept | null;
@@ -31,6 +32,7 @@ export function PublisherView({ prefilledConcept }: PublisherViewProps) {
 
       const endpoint = platform === "instagram" ? "/api/publish/instagram" : "/api/publish/tiktok";
 
+      const vault = getClientVault();
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -38,6 +40,7 @@ export function PublisherView({ prefilledConcept }: PublisherViewProps) {
           videoUrl,
           hook,
           caption,
+          vault,
         }),
       });
 

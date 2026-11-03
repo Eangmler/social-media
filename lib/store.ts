@@ -1,7 +1,15 @@
 import fs from "fs";
 import path from "path";
 import axios from "axios";
-import { AppSettings, CompetitorTarget, ContentConcept, PublishJob, DmLog } from "./types";
+import {
+  AppSettings,
+  CompetitorTarget,
+  ContentConcept,
+  PublishJob,
+  DmLog,
+  TesterAccount,
+  TesterReview,
+} from "./types";
 
 interface DBData {
   settings: AppSettings;
@@ -9,12 +17,16 @@ interface DBData {
   calendar: ContentConcept[];
   publishJobs: PublishJob[];
   dmLogs: DmLog[];
+  testers: TesterAccount[];
+  reviews: TesterReview[];
 }
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const DATA_FILE = path.join(DATA_DIR, "store.json");
+const TMP_FILE = path.join("/tmp", "viralpulse_store.json");
 
 const defaultSettings: AppSettings = {
+  adminPassword: process.env.ADMIN_PASSWORD || "admin123",
   apifyToken: process.env.APIFY_TOKEN || "",
   aiProvider: (process.env.AI_PROVIDER as "openai" | "gemini") || "openai",
   openaiApiKey: process.env.OPENAI_API_KEY || "",
@@ -69,19 +81,52 @@ const defaultCompetitors: CompetitorTarget[] = [
   },
 ];
 
+const defaultTesters: TesterAccount[] = [
+  {
+    id: "tester-1",
+    name: "Tester 1 (Creative & Hooks)",
+    passcode: "test-alpha",
+    role: "tester",
+    active: true,
+    notes: "Reviewing AI hooks, viral patterns & calendar concepts",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "tester-2",
+    name: "Tester 2 (Video & Media)",
+    passcode: "test-beta",
+    role: "tester",
+    active: true,
+    notes: "Reviewing Studio Publisher & video uploading",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "tester-3",
+    name: "Tester 3 (Growth & DMs)",
+    passcode: "test-gamma",
+    role: "tester",
+    active: true,
+    notes: "Reviewing DM automation triggers & lead capture",
+    createdAt: new Date().toISOString(),
+  },
+];
+
 let inMemoryData: DBData = {
   settings: defaultSettings,
   competitors: defaultCompetitors,
   calendar: [],
   publishJobs: [],
   dmLogs: [],
+  testers: defaultTesters,
+  reviews: [],
 };
 
 /**
  * Reads data with priority:
  * 1. Remote Cloud KV (Upstash / Vercel KV) if configured
  * 2. Local File (.data/store.json)
- * 3. In-memory cache + environment variables
+ * 3. /tmp/viralpulse_store.json (Vercel serverless writable storage)
+ * 4. In-memory cache + environment variables
  */
 async function readData(): Promise<DBData> {
   const kvUrl = inMemoryData.settings.kvRestApiUrl || process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
@@ -98,6 +143,8 @@ async function readData(): Promise<DBData> {
         inMemoryData = {
           ...inMemoryData,
           ...parsed,
+          testers: parsed.testers && parsed.testers.length > 0 ? parsed.testers : defaultTesters,
+          reviews: parsed.reviews || [],
           settings: {
             ...defaultSettings,
             ...(parsed.settings || {}),
@@ -110,6 +157,7 @@ async function readData(): Promise<DBData> {
     }
   }
 
+  // Check .data/store.json
   try {
     if (fs.existsSync(DATA_FILE)) {
       const raw = fs.readFileSync(DATA_FILE, "utf-8");
@@ -117,6 +165,8 @@ async function readData(): Promise<DBData> {
       inMemoryData = {
         ...inMemoryData,
         ...parsed,
+        testers: parsed.testers && parsed.testers.length > 0 ? parsed.testers : defaultTesters,
+        reviews: parsed.reviews || [],
         settings: {
           ...defaultSettings,
           ...(parsed.settings || {}),
@@ -125,7 +175,28 @@ async function readData(): Promise<DBData> {
       return inMemoryData;
     }
   } catch (err) {
-    console.warn("[Storage] Local file read failed, using memory:", err);
+    // Expected in read-only environment
+  }
+
+  // Check /tmp/viralpulse_store.json (persists across warm lambdas on Vercel)
+  try {
+    if (fs.existsSync(TMP_FILE)) {
+      const raw = fs.readFileSync(TMP_FILE, "utf-8");
+      const parsed = JSON.parse(raw);
+      inMemoryData = {
+        ...inMemoryData,
+        ...parsed,
+        testers: parsed.testers && parsed.testers.length > 0 ? parsed.testers : defaultTesters,
+        reviews: parsed.reviews || [],
+        settings: {
+          ...defaultSettings,
+          ...(parsed.settings || {}),
+        },
+      };
+      return inMemoryData;
+    }
+  } catch (err) {
+    // Ignore
   }
 
   return inMemoryData;
@@ -134,13 +205,14 @@ async function readData(): Promise<DBData> {
 /**
  * Writes data with persistence to:
  * 1. In-memory
- * 2. Local file (if local disk is writable)
- * 3. Cloud KV (if KV_REST_API_URL & KV_REST_API_TOKEN are configured)
+ * 2. Local file (.data/store.json if writable)
+ * 3. /tmp/viralpulse_store.json (always writable in Vercel lambda container)
+ * 4. Cloud KV (if KV_REST_API_URL & KV_REST_API_TOKEN are configured)
  */
 async function writeData(data: DBData): Promise<void> {
   inMemoryData = data;
 
-  // Local file write
+  // Local file write (.data)
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -149,6 +221,36 @@ async function writeData(data: DBData): Promise<void> {
   } catch (err) {
     // Read-only environment on Vercel lambda is expected
   }
+
+  // /tmp write (writable on Vercel serverless)
+  try {
+    fs.writeFileSync(TMP_FILE, JSON.stringify(data, null, 2), "utf-8");
+  } catch (err) {
+    // Ignore
+  }
+
+  // Cloud KV write
+  const kvUrl = data.settings.kvRestApiUrl || process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const kvToken = data.settings.kvRestApiToken || process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (kvUrl && kvToken) {
+    try {
+      await axios.post(
+        `${kvUrl}/set/viralpulse_data`,
+        JSON.stringify(data),
+        {
+          headers: {
+            Authorization: `Bearer ${kvToken}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 4000,
+        }
+      );
+    } catch (err: any) {
+      console.warn("[Storage] Cloud KV write failed:", err.message);
+    }
+  }
+}
 
   // Cloud KV write
   const kvUrl = data.settings.kvRestApiUrl || process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
@@ -371,5 +473,59 @@ export const db = {
     }
     await writeData(data);
     return newLog;
+  },
+
+  getTesters: async (): Promise<TesterAccount[]> => {
+    const data = await readData();
+    return data.testers || defaultTesters;
+  },
+
+  addTester: async (tester: Omit<TesterAccount, "id" | "createdAt">): Promise<TesterAccount> => {
+    const data = await readData();
+    const newTester: TesterAccount = {
+      ...tester,
+      id: "tester-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
+      createdAt: new Date().toISOString(),
+    };
+    if (!data.testers) data.testers = [...defaultTesters];
+    data.testers.push(newTester);
+    await writeData(data);
+    return newTester;
+  },
+
+  updateTester: async (id: string, updates: Partial<TesterAccount>): Promise<TesterAccount | undefined> => {
+    const data = await readData();
+    if (!data.testers) data.testers = [...defaultTesters];
+    const item = data.testers.find((t) => t.id === id);
+    if (item) {
+      Object.assign(item, updates);
+      await writeData(data);
+    }
+    return item;
+  },
+
+  deleteTester: async (id: string): Promise<void> => {
+    const data = await readData();
+    if (!data.testers) data.testers = [...defaultTesters];
+    data.testers = data.testers.filter((t) => t.id !== id);
+    await writeData(data);
+  },
+
+  getReviews: async (): Promise<TesterReview[]> => {
+    const data = await readData();
+    return data.reviews || [];
+  },
+
+  addReview: async (review: Omit<TesterReview, "id" | "createdAt">): Promise<TesterReview> => {
+    const data = await readData();
+    if (!data.reviews) data.reviews = [];
+    const newReview: TesterReview = {
+      ...review,
+      id: "rev-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
+      createdAt: new Date().toISOString(),
+    };
+    data.reviews.unshift(newReview);
+    await writeData(data);
+    return newReview;
   },
 };

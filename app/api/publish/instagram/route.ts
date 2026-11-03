@@ -7,13 +7,16 @@ export const maxDuration = 180;
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { videoUrl, caption, hook } = body;
+    const { videoUrl, caption, hook, vault } = body;
 
     if (!videoUrl || !caption) {
       return NextResponse.json({ error: "videoUrl and caption are required." }, { status: 400 });
     }
 
-    const settings = await db.getSettings();
+    let settings = await db.getSettings();
+    if (vault) {
+      settings = { ...settings, ...vault };
+    }
     if (!settings.metaAccessToken || !settings.instagramAccountId) {
       return NextResponse.json(
         { error: "Meta Access Token and Instagram Account ID must be configured in Settings." },

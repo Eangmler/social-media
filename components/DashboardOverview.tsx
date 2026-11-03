@@ -17,6 +17,7 @@ import {
   Radio,
 } from "lucide-react";
 import { NavTab } from "./Navbar";
+import { getClientVault } from "@/lib/auth";
 
 interface DashboardOverviewProps {
   onNavigate: (tab: NavTab) => void;
@@ -73,7 +74,12 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
     try {
       setIsTriggeringCron(true);
       setCronMessage(null);
-      const res = await fetch("/api/cron/scrape-and-generate", { method: "POST" });
+      const vault = getClientVault();
+      const res = await fetch("/api/cron/scrape-and-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vault }),
+      });
       const data = await res.json();
       if (res.ok) {
         setCronMessage(`Success: Scraped ${data.stats?.postsAnalyzed || 0} posts & synthesized ${data.stats?.conceptsGenerated || 0} hooks!`);

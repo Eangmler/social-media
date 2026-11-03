@@ -1,6 +1,7 @@
 export type SocialPlatform = "instagram" | "tiktok";
 
 export interface AppSettings {
+  adminPassword?: string;
   apifyToken: string;
   aiProvider: "openai" | "gemini";
   openaiApiKey?: string;
@@ -24,6 +25,31 @@ export interface AppSettings {
   vercelAuthToken?: string;
   vercelProjectId?: string;
   vercelTeamId?: string;
+}
+
+export interface TesterAccount {
+  id: string;
+  name: string;
+  passcode: string;
+  role: "tester";
+  active: boolean;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface TesterReview {
+  id: string;
+  testerName: string;
+  rating: number; // 1 to 5
+  category: "Scraper" | "AI Calendar" | "Publisher" | "DM Automation" | "General";
+  comment: string;
+  createdAt: string;
+}
+
+export interface AuthSession {
+  role: "admin" | "tester";
+  name: string;
+  token: string;
 }
 
 export interface CompetitorTarget {

@@ -26,7 +26,20 @@ async function handleScrapeAndGenerate(req: NextRequest) {
     }
   }
 
-  const settings = await db.getSettings();
+  let settings = await db.getSettings();
+
+  // If client passed vault in body, merge it with priority
+  if (req.method === "POST") {
+    try {
+      const body = await req.clone().json();
+      if (body?.vault) {
+        settings = { ...settings, ...body.vault };
+      }
+    } catch (e) {
+      // Body may be empty on pure cron triggers
+    }
+  }
+
   if (!settings.apifyToken) {
     return NextResponse.json(
       { error: "Apify API Token not configured. Please add your token in the Admin Settings tab." },

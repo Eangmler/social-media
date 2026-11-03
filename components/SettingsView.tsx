@@ -10,34 +10,46 @@ import {
   ExternalLink,
   Cloud,
   Sparkles,
+  ShieldCheck,
+  Lock,
 } from "lucide-react";
 import { AppSettings } from "@/lib/types";
+import {
+  getClientVault,
+  saveClientVault,
+  mergeWithClientVault,
+  getAuthSession,
+} from "@/lib/auth";
 
 export function SettingsView() {
-  const [settings, setSettings] = useState<AppSettings>({
-    apifyToken: "",
-    aiProvider: "openai",
-    openaiApiKey: "",
-    geminiApiKey: "",
-    metaAppId: "",
-    metaAppSecret: "",
-    metaAccessToken: "",
-    metaPageId: "",
-    instagramAccountId: "",
-    metaWebhookVerifyToken: "viralsaas_meta_verify_token",
-    tiktokAppId: "",
-    tiktokAppSecret: "",
-    tiktokAccessToken: "",
-    tiktokOpenId: "",
-    tiktokWebhookVerifyToken: "viralsaas_tiktok_verify_token",
-    dmTriggerKeyword: "LINK",
-    dmResponseTemplate: "",
-    dmTargetUrl: "",
-    kvRestApiUrl: "",
-    kvRestApiToken: "",
-    vercelAuthToken: "",
-    vercelProjectId: "",
-    vercelTeamId: "",
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const vault = getClientVault();
+    return {
+      adminPassword: vault.adminPassword || "admin123",
+      apifyToken: vault.apifyToken || "",
+      aiProvider: vault.aiProvider || "openai",
+      openaiApiKey: vault.openaiApiKey || "",
+      geminiApiKey: vault.geminiApiKey || "",
+      metaAppId: vault.metaAppId || "",
+      metaAppSecret: vault.metaAppSecret || "",
+      metaAccessToken: vault.metaAccessToken || "",
+      metaPageId: vault.metaPageId || "",
+      instagramAccountId: vault.instagramAccountId || "",
+      metaWebhookVerifyToken: vault.metaWebhookVerifyToken || "viralsaas_meta_verify_token",
+      tiktokAppId: vault.tiktokAppId || "",
+      tiktokAppSecret: vault.tiktokAppSecret || "",
+      tiktokAccessToken: vault.tiktokAccessToken || "",
+      tiktokOpenId: vault.tiktokOpenId || "",
+      tiktokWebhookVerifyToken: vault.tiktokWebhookVerifyToken || "viralsaas_tiktok_verify_token",
+      dmTriggerKeyword: vault.dmTriggerKeyword || "LINK",
+      dmResponseTemplate: vault.dmResponseTemplate || "",
+      dmTargetUrl: vault.dmTargetUrl || "",
+      kvRestApiUrl: vault.kvRestApiUrl || "",
+      kvRestApiToken: vault.kvRestApiToken || "",
+      vercelAuthToken: vault.vercelAuthToken || "",
+      vercelProjectId: vault.vercelProjectId || "",
+      vercelTeamId: vault.vercelTeamId || "",
+    };
   });
 
   const [saving, setSaving] = useState(false);
@@ -45,10 +57,19 @@ export function SettingsView() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch("/api/settings");
+      const session = getAuthSession();
+      const headers: Record<string, string> = {};
+      if (session?.token) {
+        headers["Authorization"] = `Bearer ${session.token}`;
+      }
+
+      const res = await fetch("/api/settings", { headers });
       const data = await res.json();
       if (data.settings) {
-        setSettings(data.settings);
+        // Merge with local vault so keys never reset
+        const merged = mergeWithClientVault(data.settings);
+        setSettings(merged);
+        saveClientVault(merged);
       }
     } catch (err) {
       console.error(err);
@@ -64,16 +85,26 @@ export function SettingsView() {
     try {
       setSaving(true);
       setMessage(null);
+
+      // Save to client vault immediately so it never resets
+      saveClientVault(settings);
+
+      const session = getAuthSession();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (session?.token) {
+        headers["Authorization"] = `Bearer ${session.token}`;
+      }
+
       const res = await fetch("/api/settings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(settings),
       });
 
       if (res.ok) {
         setMessage({
           type: "success",
-          text: "Credentials saved and synchronized directly with backend storage and API engines!",
+          text: "Credentials saved to encrypted vault & synchronized with backend engines!",
         });
         fetchSettings();
       } else {
@@ -126,6 +157,43 @@ export function SettingsView() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Section 0: Master Admin Access & Vault Security */}
+        <div className="p-8 sm:p-10 rounded-[32px] bg-gradient-to-br from-white to-[#f8fafd] border border-[#d3e3fd] shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-[#e1e3e1] pb-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-[#d3e3fd] text-[#0b57d0] flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-[#1f1f1f]">Master Admin Passcode & Security</h2>
+                <p className="text-xs text-[#727775]">
+                  Controls access to this Admin Portal. Testers use their separate dedicated access codes.
+                </p>
+              </div>
+            </div>
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#e8f0fe] text-[#0b57d0] text-xs font-semibold">
+              <Lock className="w-3.5 h-3.5" />
+              <span>Admin Protected</span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-[#444746] uppercase tracking-wider mb-2">
+              Admin Password (Default: admin123)
+            </label>
+            <input
+              type="text"
+              placeholder="Enter new admin passcode"
+              value={settings.adminPassword || "admin123"}
+              onChange={(e) => updateField("adminPassword", e.target.value)}
+              className="w-full max-w-md bg-white border border-[#e1e3e1] rounded-full px-4 py-2.5 text-sm text-[#1f1f1f] font-mono focus:outline-none focus:border-[#0b57d0] focus:ring-2 focus:ring-[#d3e3fd]"
+            />
+            <p className="text-xs text-[#727775] mt-1.5">
+              Change this to protect your portal from unauthorized visitors.
+            </p>
+          </div>
+        </div>
+
         {/* Section 1: Apify Web Scraper */}
         <div className="p-8 sm:p-10 rounded-[32px] bg-white border border-[#e1e3e1] shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-[#f1f3f4] pb-4">
