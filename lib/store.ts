@@ -252,30 +252,6 @@ async function writeData(data: DBData): Promise<void> {
   }
 }
 
-  // Cloud KV write
-  const kvUrl = data.settings.kvRestApiUrl || process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-  const kvToken = data.settings.kvRestApiToken || process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-
-  if (kvUrl && kvToken) {
-    try {
-      await axios.post(
-        `${kvUrl}/set/viralpulse_data`,
-        JSON.stringify(data),
-        {
-          headers: {
-            Authorization: `Bearer ${kvToken}`,
-            "Content-Type": "application/json",
-          },
-          timeout: 4000,
-        }
-      );
-      console.log("[Storage] Successfully synced state to Cloud KV.");
-    } catch (err: any) {
-      console.warn("[Storage] Cloud KV write failed:", err.message);
-    }
-  }
-}
-
 /**
  * Optional Vercel API Sync:
  * Automatically pushes updated settings directly to Vercel Project Environment Variables.
