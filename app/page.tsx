@@ -12,7 +12,7 @@ import { TesterManagementView } from "@/components/TesterManagementView";
 import { AuthModal } from "@/components/AuthModal";
 import { TesterFeedbackModal } from "@/components/TesterFeedbackModal";
 import { ContentConcept, AuthSession } from "@/lib/types";
-import { getAuthSession, clearAuthSession } from "@/lib/auth";
+import { getAuthSession, clearAuthSession, getClientVault } from "@/lib/auth";
 
 export default function Home() {
   const [session, setSession] = useState<AuthSession | null>(null);
