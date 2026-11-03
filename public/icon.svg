@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0f4f9"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a73e8"/>
+      <stop offset="100%" stop-color="#0b57d0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+  <rect width="504" height="504" x="4" y="4" rx="124" fill="none" stroke="#e1e3e1" stroke-width="8"/>
+
+  <!-- Google 4-color Dots at Top -->
+  <circle cx="196" cy="140" r="18" fill="#4285F4"/>
+  <circle cx="236" cy="140" r="18" fill="#EA4335"/>
+  <circle cx="276" cy="140" r="18" fill="#FBBC05"/>
+  <circle cx="316" cy="140" r="18" fill="#34A853"/>
+
+  <!-- ViralPulse Center Emblem: Waveform / Pulse Play Icon -->
+  <path d="M 170 310 L 220 220 L 256 290 L 290 250 L 340 310" 
+        fill="none" 
+        stroke="url(#blueGrad)" 
+        stroke-width="28" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+
+  <!-- Center Pulse Dot -->
+  <circle cx="256" cy="290" r="14" fill="#0b57d0"/>
+</svg>

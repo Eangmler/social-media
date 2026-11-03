@@ -1,0 +1,33 @@
+{
+  "name": "ViralPulse SaaS - Autonomous Social Media",
+  "short_name": "ViralPulse",
+  "description": "AI-driven Social Media Management SaaS for Instagram & TikTok",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#f8fafd",
+  "theme_color": "#0b57d0",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "social", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Content Calendar",
+      "url": "/?tab=calendar",
+      "description": "View generated viral hooks"
+    },
+    {
+      "name": "Studio Publisher",
+      "url": "/?tab=publisher",
+      "description": "Upload and publish Reels & TikToks"
+    }
+  ]
+}

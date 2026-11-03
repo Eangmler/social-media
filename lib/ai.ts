@@ -124,31 +124,55 @@ Analyze what made these top posts get views and comments. Then synthesize these 
   }
 
   private async callGemini(systemPrompt: string, userPrompt: string): Promise<string> {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${this.settings.geminiApiKey}`;
-    const res = await axios.post(
-      url,
-      {
-        contents: [
+    const candidateModels = [
+      "gemini-1.5-flash",
+      "gemini-1.5-flash-latest",
+      "gemini-2.0-flash",
+      "gemini-1.5-pro",
+      "gemini-1.5-pro-latest",
+    ];
+
+    let lastError: any = null;
+
+    for (const model of candidateModels) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.settings.geminiApiKey}`;
+        const res = await axios.post(
+          url,
           {
-            role: "user",
-            parts: [
+            contents: [
               {
-                text: `${systemPrompt}\n\nTask:\n${userPrompt}\n\nRespond ONLY with the JSON array.`,
+                role: "user",
+                parts: [
+                  {
+                    text: `${systemPrompt}\n\nTask:\n${userPrompt}\n\nRespond ONLY with the JSON array.`,
+                  },
+                ],
               },
             ],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.7,
+            },
           },
-        ],
-        generationConfig: {
-          responseMimeType: "application/json",
-          temperature: 0.7,
-        },
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+          {
+            headers: { "Content-Type": "application/json" },
+            timeout: 30000,
+          }
+        );
 
-    return res.data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+        const text = res.data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) {
+          console.log(`[Gemini Engine] Successfully generated concepts using ${model}.`);
+          return text;
+        }
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`[Gemini Engine] Model ${model} failed, trying next fallback:`, err.response?.data?.error?.message || err.message);
+      }
+    }
+
+    throw lastError || new Error("All Gemini models failed to generate content.");
   }
 
   private generateFallbackConcepts(): ContentConcept[] {
