@@ -68,10 +68,10 @@ export function Navbar({
             <span className="w-2.5 h-2.5 rounded-full bg-[#fbbc04]" />
             <span className="w-2.5 h-2.5 rounded-full bg-[#34a853]" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-[#1f1f1f] flex items-center gap-1.5">
-            ViralPulse
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[#e8f0fe] text-[#0b57d0]">
-              Short-form
+          <span className="text-2xl font-black tracking-tight text-[#1f1f1f] lowercase flex items-center gap-1.5">
+            meye
+            <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-[#e8f0fe] text-[#0b57d0] lowercase">
+              your social media assistant
             </span>
           </span>
         </div>

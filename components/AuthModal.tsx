@@ -88,9 +88,9 @@ export function AuthModal({ onSuccess }: AuthModalProps) {
             <span className="w-2.5 h-2.5 rounded-full bg-[#FBBC05]" />
             <span className="w-2.5 h-2.5 rounded-full bg-[#34A853]" />
           </div>
-          <h1 className="text-2xl font-bold text-[#1f1f1f] tracking-tight">ViralPulse Portal</h1>
-          <p className="text-xs text-[#727775]">
-            Sign in as Portal Admin or enter your dedicated Tester Access Passcode.
+          <h1 className="text-3xl font-black text-[#1f1f1f] tracking-tight lowercase">meye</h1>
+          <p className="text-xs text-[#727775] lowercase">
+            your social media assistant • sign in as admin or enter tester passcode
           </p>
         </div>
 

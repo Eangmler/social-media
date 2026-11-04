@@ -49,8 +49,8 @@ export function PwaRegister() {
           <Smartphone className="w-5 h-5" />
         </div>
         <div>
-          <p className="text-xs font-bold text-[#1f1f1f]">Install ViralPulse App</p>
-          <p className="text-[11px] text-[#727775]">Add to your Home Screen or Dock for 1-tap access.</p>
+          <p className="text-xs font-bold text-[#1f1f1f] lowercase">install meye</p>
+          <p className="text-[11px] text-[#727775] lowercase">your social media assistant on your home screen or dock.</p>
         </div>
       </div>
 

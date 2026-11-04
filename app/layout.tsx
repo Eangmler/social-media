@@ -3,13 +3,13 @@ import "./globals.css";
 import { PwaRegister } from "@/components/PwaRegister";
 
 export const metadata: Metadata = {
-  title: "ViralPulse | Short-form Creator Engine",
-  description: "Automated social media intelligence, short-form publishing, and comment-to-DM funnels built with Google Store design language.",
+  title: "meye | your social media assistant",
+  description: "automated social media assistant for viral hook intelligence, publishing, and dm funnels.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "ViralPulse",
+    title: "meye",
   },
   icons: {
     icon: "/icon.svg",
@@ -36,7 +36,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="ViralPulse" />
+        <meta name="apple-mobile-web-app-title" content="meye" />
       </head>
       <body className="min-h-screen bg-[#f8fafd] text-[#1f1f1f] antialiased selection:bg-[#d3e3fd] selection:text-[#041e49]">
         {children}

@@ -101,7 +101,7 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
         <div className="max-w-2xl space-y-4">
           <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-white/80 border border-[#c2e7ff] text-[#0b57d0] text-xs font-semibold shadow-sm">
             <Sparkles className="w-3.5 h-3.5 text-[#0b57d0]" />
-            <span>Autonomous Social Media Intelligence Engine</span>
+            <span className="lowercase">your social media assistant</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#1f1f1f] leading-[1.15]">

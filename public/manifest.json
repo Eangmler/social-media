@@ -1,7 +1,7 @@
 {
-  "name": "ViralPulse SaaS - Autonomous Social Media",
-  "short_name": "ViralPulse",
-  "description": "AI-driven Social Media Management SaaS for Instagram & TikTok",
+  "name": "meye - your social media assistant",
+  "short_name": "meye",
+  "description": "your social media assistant for Instagram & TikTok",
   "start_url": "/",
   "id": "/",
   "display": "standalone",
