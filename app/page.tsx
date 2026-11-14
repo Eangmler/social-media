@@ -1,109 +1,160 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Navbar, NavTab } from "@/components/Navbar";
-import { DashboardOverview } from "@/components/DashboardOverview";
-import { CompetitorScraperView } from "@/components/CompetitorScraperView";
-import { ContentCalendarView } from "@/components/ContentCalendarView";
-import { PublisherView } from "@/components/PublisherView";
-import { DmAutomationView } from "@/components/DmAutomationView";
-import { SettingsView } from "@/components/SettingsView";
-import { TesterManagementView } from "@/components/TesterManagementView";
-import { AuthModal } from "@/components/AuthModal";
-import { TesterFeedbackModal } from "@/components/TesterFeedbackModal";
-import { ContentConcept, AuthSession } from "@/lib/types";
-import { getAuthSession, clearAuthSession, getClientVault } from "@/lib/auth";
+import React, { useState } from "react";
+import { Navbar } from "@/components/Navbar";
+import { Hero } from "@/components/Hero";
+import { FeaturedCategories } from "@/components/FeaturedCategories";
+import { ProductGrid } from "@/components/ProductGrid";
+import { BrandManifesto } from "@/components/BrandManifesto";
+import { Footer } from "@/components/Footer";
+import { ProductModal } from "@/components/ProductModal";
+import { CartDrawer, CartItem } from "@/components/CartDrawer";
+import { SearchModal } from "@/components/SearchModal";
+import { PRODUCTS, Product } from "@/lib/products";
 
 export default function Home() {
-  const [session, setSession] = useState<AuthSession | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [currentTab, setCurrentTab] = useState<NavTab>("dashboard");
-  const [selectedConcept, setSelectedConcept] = useState<ContentConcept | null>(null);
-  const [isTriggeringScrape, setIsTriggeringScrape] = useState(false);
+  const [cart, setCart] = useState<CartItem[]>([
+    {
+      product: PRODUCTS[0], // Preload with Baseus 65W for immediate e-commerce realism
+      quantity: 1,
+    },
+  ]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    const existing = getAuthSession();
-    if (existing) {
-      setSession(existing);
-    }
-    setAuthChecked(true);
-  }, []);
-
-  const handleLogout = () => {
-    clearAuthSession();
-    setSession(null);
-    setCurrentTab("dashboard");
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => {
+      setToast(null);
+    }, 2800);
   };
 
-  const handleSendToPublisher = (concept: ContentConcept) => {
-    setSelectedConcept(concept);
-    setCurrentTab("publisher");
-  };
-
-  const handleTriggerScrape = async () => {
-    try {
-      setIsTriggeringScrape(true);
-      const vault = getClientVault();
-      await fetch("/api/cron/scrape-and-generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vault }),
-      });
-      if (currentTab !== "calendar") {
-        setCurrentTab("calendar");
+  const handleAddToCart = (product: Product, quantity: number = 1) => {
+    setCart((prev) => {
+      const existing = prev.find((item) => item.product.id === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.product.id === product.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsTriggeringScrape(false);
+      return [...prev, { product, quantity }];
+    });
+    showToast(`Added ${product.title} to bag`);
+  };
+
+  const handleUpdateQuantity = (productId: string, quantity: number) => {
+    if (quantity <= 0) {
+      handleRemoveItem(productId);
+      return;
+    }
+    setCart((prev) =>
+      prev.map((item) =>
+        item.product.id === productId ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const handleRemoveItem = (productId: string) => {
+    setCart((prev) => prev.filter((item) => item.product.id !== productId));
+  };
+
+  const handleCheckout = () => {
+    alert(
+      "Shopify Sync Prototype // Order routing initialized for Greater Accra Region via Oura Logistics network."
+    );
+  };
+
+  const handleShopClick = () => {
+    const el = document.getElementById("bestsellers");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
     }
   };
 
-  // If not logged in, show the Google Store Auth Gate
-  if (authChecked && !session) {
-    return <AuthModal onSuccess={(newSession) => setSession(newSession)} />;
-  }
+  const handleExploreProduct = (productId: string) => {
+    const found = PRODUCTS.find((p) => p.id === productId);
+    if (found) {
+      setSelectedProduct(found);
+    }
+  };
+
+  const totalCartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-[#f8fafd] text-[#1f1f1f] flex flex-col">
-      {/* Google Store Style Top Navigation Bar */}
+    <div className="min-h-screen flex flex-col bg-[#F7F7F5] text-[#1A1A1A] selection:bg-[#1A1A1A] selection:text-[#F7F7F5]">
+      {/* Navbar with Sticky States and Bag Drawer Link */}
       <Navbar
-        currentTab={currentTab}
-        onSelectTab={setCurrentTab}
-        onTriggerScrape={handleTriggerScrape}
-        isTriggering={isTriggeringScrape}
-        session={session}
-        onLogout={handleLogout}
+        cartCount={totalCartCount}
+        onOpenCart={() => setIsCartOpen(true)}
+        onOpenSearch={() => setIsSearchOpen(true)}
+        onSelectCategory={(slug) => setActiveCategory(slug)}
+        activeCategory={activeCategory}
       />
 
-      {/* Main Content Viewport */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-        {currentTab === "dashboard" && <DashboardOverview onNavigate={setCurrentTab} />}
-        {currentTab === "competitors" && <CompetitorScraperView onNavigate={setCurrentTab} />}
-        {currentTab === "calendar" && (
-          <ContentCalendarView onSendToPublisher={handleSendToPublisher} onNavigate={setCurrentTab} />
-        )}
-        {currentTab === "publisher" && <PublisherView prefilledConcept={selectedConcept} />}
-        {currentTab === "dm-automation" && <DmAutomationView />}
-        {currentTab === "testers" && session?.role === "admin" && <TesterManagementView />}
-        {currentTab === "settings" && session?.role === "admin" && <SettingsView />}
+      {/* Hero Section */}
+      <main className="flex-1">
+        <Hero
+          onShopClick={handleShopClick}
+          onExploreProduct={handleExploreProduct}
+        />
+
+        {/* Featured Categories (Magazine Style Layout) */}
+        <FeaturedCategories
+          onSelectCategory={(slug) => setActiveCategory(slug)}
+          activeCategory={activeCategory}
+        />
+
+        {/* Bestsellers Product Grid (The Core Experience) */}
+        <ProductGrid
+          onAddToCart={(prod) => handleAddToCart(prod, 1)}
+          onQuickView={(prod) => setSelectedProduct(prod)}
+          selectedCategorySlug={activeCategory}
+          onSelectCategory={(slug) => setActiveCategory(slug)}
+        />
+
+        {/* Dieter Rams Manifesto & Editorial Photography */}
+        <BrandManifesto />
       </main>
 
-      {/* Tester Floating Feedback Widget */}
-      {session && session.role === "tester" && <TesterFeedbackModal session={session} />}
+      {/* Severely Minimalist Footer */}
+      <Footer />
 
-      {/* Google Store Style Minimal Footer */}
-      <footer className="border-t border-[#e1e3e1] bg-white py-8 text-xs text-[#727775]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-[#34a853]" />
-            <span className="font-bold text-[#1f1f1f] lowercase">meye</span>
-            <span>•</span>
-            <span className="lowercase">your social media assistant</span>
-          </div>
-          <p>© 2026 meye.</p>
+      {/* Interactive Detail Modal */}
+      <ProductModal
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        onAddToCart={handleAddToCart}
+      />
+
+      {/* Cart Drawer Slide-over */}
+      <CartDrawer
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        items={cart}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onCheckout={handleCheckout}
+      />
+
+      {/* Minimalist Search Overlay */}
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSelectProduct={(prod) => setSelectedProduct(prod)}
+      />
+
+      {/* Tactile Notification Toast */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-[#1A1A1A] text-white px-5 py-3 shadow-xl font-mono text-xs uppercase tracking-wider flex items-center space-x-3 border border-neutral-700 animate-in slide-in-from-bottom-3 duration-300">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span>{toast}</span>
         </div>
-      </footer>
+      )}
     </div>
   );
 }

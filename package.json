@@ -1,6 +1,7 @@
 {
-  "name": "meye",
+  "name": "useoura-living",
   "version": "1.0.0",
+  "description": "useoura living — Dieter Rams-inspired minimal e-commerce prototype for Next.js and Vercel",
   "private": true,
   "scripts": {
     "dev": "next dev",

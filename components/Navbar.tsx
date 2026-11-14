@@ -1,152 +1,193 @@
 "use client";
 
-import React from "react";
-import {
-  LayoutDashboard,
-  Users2,
-  CalendarDays,
-  Send,
-  MessageSquareCode,
-  Settings,
-  Sparkles,
-  Users,
-  LogOut,
-  ShieldCheck,
-  UserCheck,
-} from "lucide-react";
-import { AuthSession } from "@/lib/types";
-
-export type NavTab =
-  | "dashboard"
-  | "competitors"
-  | "calendar"
-  | "publisher"
-  | "dm-automation"
-  | "testers"
-  | "settings";
+import React, { useState, useEffect } from "react";
+import { Search, User, ShoppingBag, Menu, X, ArrowUpRight } from "lucide-react";
 
 interface NavbarProps {
-  currentTab: NavTab;
-  onSelectTab: (tab: NavTab) => void;
-  onTriggerScrape?: () => void;
-  isTriggering?: boolean;
-  session?: AuthSession | null;
-  onLogout?: () => void;
+  cartCount: number;
+  onOpenCart: () => void;
+  onOpenSearch: () => void;
+  onSelectCategory?: (categorySlug: string) => void;
+  activeCategory?: string;
 }
 
-export function Navbar({
-  currentTab,
-  onSelectTab,
-  onTriggerScrape,
-  isTriggering,
-  session,
-  onLogout,
-}: NavbarProps) {
-  const isAdmin = session?.role === "admin";
+export const Navbar: React.FC<NavbarProps> = ({
+  cartCount,
+  onOpenCart,
+  onOpenSearch,
+  onSelectCategory,
+  activeCategory = "all",
+}) => {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const allTabs = [
-    { id: "dashboard", label: "Overview", icon: LayoutDashboard, adminOnly: false },
-    { id: "competitors", label: "Competitor Scraper", icon: Users2, adminOnly: false },
-    { id: "calendar", label: "AI Content Calendar", icon: CalendarDays, adminOnly: false },
-    { id: "publisher", label: "Publishing Layer", icon: Send, adminOnly: false },
-    { id: "dm-automation", label: "DM Automation", icon: MessageSquareCode, adminOnly: false },
-    { id: "testers", label: "Testers & Reviews", icon: Users, adminOnly: true },
-    { id: "settings", label: "Settings & APIs", icon: Settings, adminOnly: true },
-  ] as const;
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  const visibleTabs = allTabs.filter((t) => (isAdmin ? true : !t.adminOnly));
+  const navLinks = [
+    { name: "Mobile & Desk", slug: "mobile-desk" },
+    { name: "Smart Home", slug: "smart-home" },
+    { name: "Auto", slug: "automotive" },
+    { name: "Lifestyle", slug: "lifestyle" },
+  ];
+
+  const handleNavClick = (slug: string) => {
+    if (onSelectCategory) {
+      onSelectCategory(slug);
+    }
+    setMobileMenuOpen(false);
+    const gridEl = document.getElementById("bestsellers");
+    if (gridEl) {
+      gridEl.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#e1e3e1]">
-      {/* Top Brand & Utility Row */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Brand Logo */}
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onSelectTab("dashboard")}>
-          <div className="flex items-center space-x-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#4285f4]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#ea4335]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#fbbc04]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#34a853]" />
+    <>
+      {/* Top Utility Announcement Bar */}
+      <div className="w-full bg-[#1A1A1A] text-[#F7F7F5] py-2 px-4 text-[10px] uppercase font-mono tracking-[0.25em] flex justify-between items-center border-b border-neutral-800">
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="hidden sm:inline">OURA LOGISTICS ACCRA //</span>
+            <span>NEXT-DAY DISPATCH TO ACCRA & TEMA</span>
           </div>
-          <span className="text-2xl font-black tracking-tight text-[#1f1f1f] lowercase flex items-center gap-1.5">
-            meye
-            <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-[#e8f0fe] text-[#0b57d0] lowercase">
-              your social media assistant
-            </span>
-          </span>
-        </div>
-
-        {/* Right Utility & Status */}
-        <div className="flex items-center space-x-3">
-          {/* Active Cron Status Chip */}
-          <div className="hidden sm:flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#e6f4ea] border border-[#ceead6] text-[#137333] text-xs font-medium">
-            <span className="w-2 h-2 rounded-full bg-[#34a853] animate-pulse" />
-            <span>Mon 09:00 GMT Cron Active</span>
+          <div className="flex items-center space-x-4 text-neutral-400">
+            <span className="hidden md:inline">FREE DELIVERY ON ORDERS &gt; GH₵ 400</span>
+            <span className="text-neutral-500">|</span>
+            <span className="text-neutral-300 font-medium">GHANA (GH₵)</span>
           </div>
-
-          {/* Quick Action Pill Button */}
-          {onTriggerScrape && (
-            <button
-              onClick={onTriggerScrape}
-              disabled={isTriggering}
-              className="flex items-center space-x-1.5 px-4 py-1.5 rounded-full bg-[#0b57d0] hover:bg-[#0842a0] text-white text-xs font-semibold shadow-sm hover:shadow transition disabled:opacity-50"
-            >
-              <Sparkles className={`w-3.5 h-3.5 ${isTriggering ? "animate-spin" : ""}`} />
-              <span>{isTriggering ? "Scraping..." : "Run Scraper"}</span>
-            </button>
-          )}
-
-          {/* User Badge & Logout */}
-          {session && (
-            <div className="flex items-center space-x-2 pl-2 border-l border-[#e1e3e1]">
-              <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#f1f3f4] text-xs text-[#1f1f1f] font-medium">
-                {isAdmin ? (
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#0b57d0]" />
-                ) : (
-                  <UserCheck className="w-3.5 h-3.5 text-[#34a853]" />
-                )}
-                <span className="hidden sm:inline font-semibold">{session.name}</span>
-              </div>
-
-              {onLogout && (
-                <button
-                  onClick={onLogout}
-                  title="Sign Out"
-                  className="p-1.5 rounded-full hover:bg-[#f1f3f4] text-[#727775] hover:text-[#c5221f] transition"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Google Store Style Navigation Pills Bar */}
-      <div className="border-t border-[#f1f3f4] bg-[#f8fafd]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-1 sm:space-x-2 py-2 overflow-x-auto no-scrollbar">
-            {visibleTabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = currentTab === tab.id;
+      {/* Main Navbar */}
+      <header
+        className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+          scrolled
+            ? "bg-[#F7F7F5]/95 backdrop-blur-md border-b border-[#EAEAEA] shadow-[0_1px_0_0_#EAEAEA]"
+            : "bg-[#F7F7F5] border-b border-[#EAEAEA]"
+        }`}
+      >
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12 h-16 md:h-20 flex items-center justify-between">
+          {/* Left: Wordmark */}
+          <div className="flex items-center space-x-4">
+            <a
+              href="#"
+              className="group flex items-baseline space-x-1.5 text-xl md:text-2xl transition-opacity hover:opacity-85"
+            >
+              <span className="font-semibold text-[#1A1A1A] tracking-tight">useoura</span>
+              <span className="font-light text-neutral-400">living</span>
+            </a>
+            <span className="hidden xl:inline-block text-[9px] font-mono tracking-[0.2em] text-neutral-400 uppercase border border-neutral-300/80 px-1.5 py-0.5 rounded-none">
+              CAT. 26
+            </span>
+          </div>
+
+          {/* Center: Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-8 lg:space-x-12">
+            {navLinks.map((link) => {
+              const isActive = activeCategory === link.slug;
               return (
                 <button
-                  key={tab.id}
-                  onClick={() => onSelectTab(tab.id as NavTab)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                  key={link.slug}
+                  onClick={() => handleNavClick(link.slug)}
+                  className={`relative py-1 text-xs uppercase font-mono tracking-[0.2em] transition-colors duration-200 ${
                     isActive
-                      ? "bg-[#d3e3fd] text-[#041e49] shadow-sm font-semibold"
-                      : "text-[#444746] hover:text-[#1f1f1f] hover:bg-[#e9eef6]"
+                      ? "text-[#1A1A1A] font-semibold"
+                      : "text-neutral-500 hover:text-[#1A1A1A]"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? "text-[#0b57d0]" : "text-[#727775]"}`} />
-                  <span>{tab.label}</span>
+                  {link.name}
+                  {isActive && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#1A1A1A]" />
+                  )}
                 </button>
               );
             })}
           </nav>
+
+          {/* Right: Actions */}
+          <div className="flex items-center space-x-3 sm:space-x-5">
+            <button
+              onClick={onOpenSearch}
+              aria-label="Search catalog"
+              className="p-2 text-[#1A1A1A] hover:bg-[#EAEAEA]/80 rounded-full transition-colors"
+            >
+              <Search strokeWidth={1.25} className="w-5 h-5" />
+            </button>
+
+            <button
+              aria-label="Account sign in"
+              onClick={() => alert("Account portal // Order tracking available for existing customers.")}
+              className="p-2 text-[#1A1A1A] hover:bg-[#EAEAEA]/80 rounded-full transition-colors hidden sm:flex"
+            >
+              <User strokeWidth={1.25} className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={onOpenCart}
+              aria-label="Shopping bag"
+              className="relative flex items-center space-x-2 px-3 py-2 bg-[#1A1A1A] text-[#F7F7F5] hover:bg-neutral-800 transition-colors text-xs font-mono uppercase tracking-wider rounded-none"
+            >
+              <ShoppingBag strokeWidth={1.25} className="w-4 h-4" />
+              <span className="font-medium text-[11px]">Bag</span>
+              <span className="inline-flex items-center justify-center bg-white text-[#1A1A1A] w-4 h-4 text-[10px] font-bold rounded-full ml-1">
+                {cartCount}
+              </span>
+            </button>
+
+            {/* Mobile menu toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+              className="p-2 text-[#1A1A1A] md:hidden hover:bg-[#EAEAEA] transition-colors"
+            >
+              {mobileMenuOpen ? (
+                <X strokeWidth={1.25} className="w-6 h-6" />
+              ) : (
+                <Menu strokeWidth={1.25} className="w-6 h-6" />
+              )}
+            </button>
+          </div>
         </div>
-      </div>
-    </header>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-[#EAEAEA] bg-[#F7F7F5] px-6 py-8 space-y-6 animate-in slide-in-from-top-2 duration-200">
+            <div className="flex flex-col space-y-4">
+              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-neutral-400">
+                Collections
+              </span>
+              {navLinks.map((link) => (
+                <button
+                  key={link.slug}
+                  onClick={() => handleNavClick(link.slug)}
+                  className="flex items-center justify-between text-left py-2 text-base font-medium text-[#1A1A1A] border-b border-neutral-200"
+                >
+                  <span>{link.name}</span>
+                  <ArrowUpRight strokeWidth={1.25} className="w-4 h-4 text-neutral-400" />
+                </button>
+              ))}
+            </div>
+
+            <div className="pt-4 border-t border-neutral-200 flex flex-col space-y-3">
+              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-neutral-400">
+                Logistics & Support
+              </span>
+              <div className="text-xs text-neutral-600 space-y-1 font-mono">
+                <p>Oura Hub: Accra, Ghana</p>
+                <p>Dispatch: Monday – Saturday (8:00 – 18:00)</p>
+                <p>Support: +233 50 000 0000</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </header>
+    </>
   );
-}
+};

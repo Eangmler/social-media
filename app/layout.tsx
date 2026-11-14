@@ -1,28 +1,20 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { PwaRegister } from "@/components/PwaRegister";
 
 export const metadata: Metadata = {
-  title: "meye | your social media assistant",
-  description: "automated social media assistant for viral hook intelligence, publishing, and dm funnels.",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "meye",
-  },
+  title: "useoura living — Curated Technology & Daily Essentials",
+  description: "Dieter Rams-inspired minimalist tech and automotive upgrades, delivered next-day via the Oura network across Ghana.",
+  keywords: ["useoura living", "minimalist tech", "Braun aesthetic", "Dieter Rams", "Ghana tech", "Accra delivery", "curated electronics"],
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg",
+    icon: "/favicon.ico",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b57d0",
+  themeColor: "#F7F7F5",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  userScalable: false,
 };
 
 export default function RootLayout({
@@ -31,16 +23,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="meye" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap"
+          rel="stylesheet"
+        />
       </head>
-      <body className="min-h-screen bg-[#f8fafd] text-[#1f1f1f] antialiased selection:bg-[#d3e3fd] selection:text-[#041e49]">
+      <body className="min-h-screen bg-[#F7F7F5] text-[#1A1A1A] antialiased selection:bg-[#1A1A1A] selection:text-[#F7F7F5]">
         {children}
-        <PwaRegister />
       </body>
     </html>
   );
